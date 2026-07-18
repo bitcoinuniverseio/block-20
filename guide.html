@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Integration and operational guide for Bitcoin Universe Inscribe BLOCK-20.">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#120d09">
     <title>BLOCK-20 integration guide | Bitcoin Universe</title>
     <link rel="stylesheet" href="site.css">
   </head>
@@ -18,6 +18,7 @@
           <a href="api.html">API</a>
           <a href="lifecycle.html">Lifecycle</a>
           <a href="guide.html" aria-current="page">Integration</a>
+          <a href="mint-hash.html">Mint hash</a>
           <a href="conformance.html">Conformance</a>
         </nav>
         <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20" target="_blank" rel="noreferrer">Implementation source</a>
@@ -50,7 +51,7 @@
             <article><h3>Choose the reader and network first</h3><p>Decide which compatible indexer or reader will evaluate the payload, and ensure the connected wallet, receiver address, server configuration, and payment path use the same Bitcoin network.</p></article>
             <article><h3>Collect and validate intent locally</h3><p>Validate ticker, amount, supply, and mint limit according to your product and reader requirements. The server does not enforce many of these semantic constraints.</p></article>
             <article><h3>Require an explicit receiver address</h3><p>Collect a valid user-controlled receiver address for every normal order. Display it on the review screen, and store it before calling the API.</p></article>
-            <article><h3>Create one order and freeze its details</h3><p>Call <code>POST /block20/order</code>. Use the returned <code>inscriptionJson</code>, <code>commitAddress</code>, <code>commitAmount</code>, network, and expiry as the immutable payment instruction for that order.</p></article>
+            <article><h3>Create one order and freeze its details</h3><p>Call <code>POST /block20/order</code>. Use the returned <code>inscriptionJson</code>, <code>blockHash</code>, <code>commitAddress</code>, <code>commitAmount</code>, network, and expiry as the immutable payment instruction for that order.</p></article>
             <article><h3>Obtain one intentional payment</h3><p>Ask the wallet to fund the returned address. Prevent duplicate submissions and do not reuse a commit address for unrelated funds.</p></article>
             <article><h3>Poll order status and surface uncertainty</h3><p>Poll the public order endpoint. Show the distinctions between awaiting payment, reveal retry, terminal error, and a reveal transaction ID. Never equate an HTTP 201 with a confirmed reveal.</p></article>
             <article><h3>Verify in the intended reader</h3><p>After <code>revealTxid</code> exists, confirm the inscription bytes and ask the selected reader or indexer for the intended result. Keep every identifier needed to reproduce the outcome.</p></article>
@@ -70,6 +71,7 @@
               <ul class="note-list">
                 <li>Normalize and validate the ticker with the target reader's documented rules.</li>
                 <li>Require a positive integer amount if that is your reader's requirement. The current API does not do so.</li>
+                <li>Use whole-number amount and fee-rate values. Current request parsing accepts decimals, but integer-backed persistence does not establish a reliable decimal round trip.</li>
                 <li>Require explicit numeric <code>maxSupply</code> and <code>limitMint</code> for deploys. Do not rely on public endpoint defaults.</li>
                 <li>Reject a receiver address that does not belong to the intended network.</li>
                 <li>Display fee rate, commit amount, and expiry with units before a wallet opens.</li>
@@ -79,7 +81,7 @@
               <h3>Do not send as client input</h3>
               <ul class="note-list">
                 <li><code>p</code>. The writer inserts literal <code>block-20</code>.</li>
-                <li><code>hash</code> for a normal mint. The server fetches and inserts its current tip hash.</li>
+                <li><code>hash</code> for a normal mint. The server fetches and inserts its own observed tip hash. <a href="mint-hash.html">See exact selection and verification rules</a>.</li>
                 <li>Assumptions that <code>repeatCount</code> creates multiple direct BLOCK-20 inscriptions.</li>
                 <li>Secrets or private keys. The server-owned commit key is internal infrastructure, not a client API field.</li>
                 <li>An arbitrary commit outpoint unless you understand the advanced reveal path and its safety limits.</li>
@@ -110,7 +112,7 @@
           <div class="grid two" style="margin-top:18px">
             <article class="card">
               <h3>Review screen requirements</h3>
-              <p>Show the action, ticker, exact <code>inscriptionJson</code>, selected network, receiver address, commit address, commit amount in sats and BTC, service state, and expiry. Include a plain-language warning that the server performs the reveal.</p>
+              <p>Show the action, ticker, exact <code>inscriptionJson</code>, returned <code>blockHash</code> for a mint, selected network, receiver address, commit address, commit amount in sats and BTC, service state, and expiry. Include a plain-language warning that the server performs the reveal.</p>
             </article>
             <article class="card">
               <h3>Payment controls</h3>
@@ -133,14 +135,39 @@
           <div class="grid two">
             <article class="card">
               <h3>Normal mint</h3>
-              <p>The server obtains the current tip hash and emits it as <code>hash</code>. A UI can preview that mint hashes are automatic, but it must show the final server-returned <code>inscriptionJson</code> as the authoritative result.</p>
-              <p class="small">The current server does not locally validate the hash shape. Your integration should not manufacture a hash field for this API path.</p>
+              <p>The server observes the configured Bitcoin tip during order creation and emits that block ID as <code>hash</code>. A UI can explain that mint hashes are automatic, but it must show the final server-returned <code>inscriptionJson</code> and <code>blockHash</code> as the authoritative result.</p>
+              <p class="small">The snapshot is not the reveal transaction or later confirmation block. The current server does not locally validate canonical hash shape, active-chain membership, or freshness. <a href="mint-hash.html">Use the mint-hash verification procedure</a>.</p>
             </article>
             <article class="card">
               <h3>Repeated mints</h3>
               <p>Direct <code>repeatCount</code> increases calculated funding but does not create multiple payloads or multiple monitor reveals. The current frontend uses a separate generic bulk endpoint for normal multi-mint UI.</p>
               <p class="small">Do not expose direct order <code>repeatCount</code> as a quantity control unless you intentionally support its current operational behavior.</p>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Payment and audit contract</p><h2>Preserve the evidence, fund one eligible output.</h2></div>
+            <p>The public order object is intentionally not a complete recovery record. Payment detection and reveal also operate on one selected UTXO, so split or excessive funding changes the operational result.</p>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3>Keep a durable issuance record</h3>
+              <p>Persist the original request, returned <code>inscriptionJson</code>, <code>blockHash</code>, receiver address, fee rate, output value, commit address, commit amount, order timestamps, payment transaction and output, reveal transaction, and chosen reader or indexer.</p>
+              <p class="small">Later public reads omit several of these fields. For a mint, retain both the hash and the exact JSON string, not just a reconstructed form.</p>
+            </article>
+            <article class="card">
+              <h3>Fund a single deliberate UTXO</h3>
+              <p>Payment detection looks for one UTXO at the commit address that individually meets the minimum requirement. Several smaller outputs are not combined. When more than one eligible UTXO exists, the monitor prefers a confirmed one and selects the largest eligible value.</p>
+              <p class="small">The reveal consumes the selected output's full value. After reveal and service fees, the residual is sent to the receiver, so do not overfund or reuse the commit address.</p>
+            </article>
+          </div>
+          <div class="callout danger" style="margin-top:16px">
+            <strong>Direct <code>repeatCount</code> can magnify this funding risk.</strong>
+            It multiplies the calculated commit amount, but direct BLOCK-20 order handling still stores one payload and triggers one reveal attempt. Do not model it as multiple independently funded mints.
           </div>
         </div>
       </section>
@@ -158,7 +185,7 @@
                 <tr><td>Token list unavailable</td><td>Offer retry and show that token discovery depends on external indexers. Do not construct a mint from stale or unknown token information without clear user confirmation.</td></tr>
                 <tr><td>Latest-block lookup fails</td><td>Do not create a normal mint order. The server cannot generate its required current-hash payload.</td></tr>
                 <tr><td>Order creation validation error</td><td>Keep the user's draft, correct the invalid field, and create a new order. Do not ask for payment without a returned order ID and payment instruction.</td></tr>
-                <tr><td>Payment not detected</td><td>Confirm address, network, output value, and transaction status. Retain the payment transaction ID. Do not send a second payment by default.</td></tr>
+                <tr><td>Payment not detected</td><td>Confirm address, network, transaction status, and that one individual UTXO meets the required amount. Retain transaction ID and vout. Do not send a second payment by default.</td></tr>
                 <tr><td><code>reveal_failed</code></td><td>Explain that the service may retry automatically. Preserve order ID and request ID. Avoid advising the user to spend or move the commit output.</td></tr>
                 <tr><td><code>reveal_error</code> or missing result</td><td>Escalate with order ID, receiver, commit details, payload, and transaction IDs. The public order response omits internal error detail and retry count.</td></tr>
                 <tr><td>Reveal transaction exists but reader does not show expected state</td><td>Inspect the exact inscription bytes and use the reader or indexer version chosen at the start of the flow. This is a compatibility question, not proof that the Bitcoin transaction was absent.</td></tr>
@@ -183,7 +210,7 @@
             <article class="card">
               <h3>What to observe</h3>
               <p>Monitor upstream indexer latency, tip lookup success, reveal broadcast failures, order-state counts, background worker liveness, request IDs, database durability, and access to the private signing material required for unresolved orders.</p>
-              <p class="small">Use health checks and a controlled release procedure before accepting production payments.</p>
+              <p class="small">The pending-order monitor uses an in-process lock and scans a bounded oldest-first batch. In a multi-instance deployment, establish one active worker or a distributed lock. Use health checks and a controlled release procedure before accepting production payments.</p>
             </article>
           </div>
         </div>
@@ -198,6 +225,7 @@
           <ul class="checklist">
             <li>Request and display a valid receiver address for all normal orders.</li>
             <li>Compare the returned <code>inscriptionJson</code> with the intended operation before payment.</li>
+            <li>For a mint, assert exact equality between parsed <code>inscriptionJson.hash</code> and returned <code>blockHash</code>, then apply the chosen reader's block-context policy.</li>
             <li>Test order creation, payment detection, reveal success, reveal retry, expiry, and reader verification on the intended network.</li>
             <li>Ensure the UI handles a 201 reveal response with <code>revealTxid: null</code> as a failure state, not success.</li>
             <li>Save enough support evidence to reconstruct a result without relying on volatile indexer data.</li>

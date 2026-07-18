@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="BLOCK-20 on-chain payload specification and exact Inscribe writer behavior.">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#120d09">
     <title>BLOCK-20 payload specification | Bitcoin Universe</title>
     <link rel="stylesheet" href="site.css">
   </head>
@@ -18,6 +18,7 @@
           <a href="api.html">API</a>
           <a href="lifecycle.html">Lifecycle</a>
           <a href="guide.html">Integration</a>
+          <a href="mint-hash.html">Mint hash</a>
           <a href="conformance.html">Conformance</a>
         </nav>
         <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/block20/block20.service.ts" target="_blank" rel="noreferrer">Payload builder</a>
@@ -83,7 +84,7 @@
 }</code></pre>
             </article>
             <article class="code-card">
-              <header><strong>Mint</strong><span>Hash is injected by the server</span></header>
+              <header><strong>Mint</strong><span>Tip snapshot injected by the server</span></header>
               <pre><code>{
   "p": "block-20",
   "op": "mint",
@@ -106,6 +107,10 @@
             <strong>Do not use the examples as a promise of external indexer acceptance.</strong>
             In particular, the current order endpoint can emit <code>"amt":"0"</code> and accepts decimal amounts. A compatible reader may enforce stronger rules.
           </div>
+          <div class="callout warn">
+            <strong>A mint hash records what the writer observed at order creation.</strong>
+            It is a Bitcoin block ID selected before funding or reveal, not the later reveal transaction or its confirmation block. The server trims the upstream response but does not revalidate its format, freshness, active-chain membership, or reorganization status. <a href="mint-hash.html">See the full mint-hash specification and verification procedure</a>.
+          </div>
         </div>
       </section>
 
@@ -126,7 +131,7 @@
                 <tr><td><code>lim</code></td><td>Deploy</td><td>String</td><td>Copied from <code>limitMint</code> through string coercion. In the public order path, when omitted it uses normalized <code>amount</code>, which defaults to <code>"0"</code>.</td></tr>
                 <tr><td><code>des</code></td><td>Deploy</td><td>String, optional</td><td>Copied only when API <code>description</code> is truthy. The server does not validate its contents.</td></tr>
                 <tr><td><code>amt</code></td><td>Mint, transfer</td><td>String</td><td>Serialized from normalized API <code>amount</code>. The current endpoint permits finite values from 0 through JavaScript safe integer range, including decimals.</td></tr>
-                <tr><td><code>hash</code></td><td>Mint</td><td>String</td><td>Fetched from the configured Bitcoin tip source and injected by the server. It is not a public order input. The writer trims it but does not locally verify a 64-character hex shape.</td></tr>
+                <tr><td><code>hash</code></td><td>Mint</td><td>String</td><td>Backend-observed Bitcoin tip block ID, selected during order creation and injected by the server. It is not a public order input. The writer trims it but does not locally verify canonical shape, active-chain membership, freshness, or reorganization status. <a href="mint-hash.html">Mint-hash reference</a>.</td></tr>
               </tbody>
             </table>
           </div>
@@ -149,7 +154,7 @@
                 <tr><td><code>maxSupply</code></td><td>Not numeric-validated</td><td>Becomes <code>max</code>; omission produces <code>"21000000"</code>.</td></tr>
                 <tr><td><code>limitMint</code></td><td>Not numeric-validated</td><td>Becomes <code>lim</code>; omission falls back to normalized <code>amount</code>.</td></tr>
                 <tr><td><code>description</code></td><td>Not validated</td><td>Becomes <code>des</code> only if truthy.</td></tr>
-                <tr><td>Client-supplied <code>p</code> or <code>hash</code></td><td>Not part of the public order input</td><td><code>p</code> is fixed by the writer; normal mint <code>hash</code> is fetched by the writer.</td></tr>
+                <tr><td>Client-supplied <code>p</code> or <code>hash</code></td><td>Not part of the public order input</td><td><code>p</code> is fixed by the writer. A normal mint ignores any caller intent for <code>hash</code> and uses a fresh backend lookup, so clients must inspect the final returned payload.</td></tr>
               </tbody>
             </table>
           </div>
@@ -183,7 +188,7 @@
                 <li>Numeric formatting or supply relationships for <code>maxSupply</code> and <code>limitMint</code>.</li>
                 <li>Description size or contents.</li>
                 <li>A valid user-controlled receiver address at order creation time.</li>
-                <li>A 64-character hex shape for the upstream mint hash before it is emitted.</li>
+                <li>A canonical 64-character hexadecimal shape, chain membership, freshness window, or reorganization status for the upstream mint hash before it is emitted.</li>
               </ul>
             </article>
           </div>

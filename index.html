@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Implementation-accurate documentation for the Bitcoin Universe Inscribe BLOCK-20 profile.">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#120d09">
     <title>BLOCK-20 documentation | Bitcoin Universe</title>
     <link rel="stylesheet" href="site.css">
   </head>
@@ -20,6 +20,7 @@
           <a href="api.html">API</a>
           <a href="lifecycle.html">Lifecycle</a>
           <a href="guide.html">Integration</a>
+          <a href="mint-hash.html">Mint hash</a>
           <a href="conformance.html">Conformance</a>
         </nav>
         <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20" target="_blank" rel="noreferrer">Implementation source</a>
@@ -34,7 +35,7 @@
           <p class="lead">The practical reference for the emitted inscription payload, the order API, and the server-assisted commit and reveal flow used by Bitcoin Universe Inscribe.</p>
           <div class="actions">
             <a class="button" href="reference.html">Read the payload specification</a>
-            <a class="button secondary" href="api.html">Review the API contract</a>
+            <a class="button secondary" href="mint-hash.html">Understand the mint hash</a>
           </div>
         </div>
         <aside class="hero-panel" aria-label="BLOCK-20 scope at a glance">
@@ -90,7 +91,7 @@
           </div>
           <div class="callout warn">
             <strong>Mint hashes are server-generated.</strong>
-            <code>POST /block20/order</code> fetches the current tip hash for every normal <code>mint</code> and emits it as <code>hash</code>. A client does not supply the hash in this endpoint.
+            <code>POST /block20/order</code> snapshots the configured Bitcoin tip while creating every normal <code>mint</code> and emits the resulting block ID as <code>hash</code>. A client does not supply it. The snapshot is not the later reveal block, and it is not a transaction or inscription ID. <a href="mint-hash.html">Read the full mint-hash reference</a>.
           </div>
           <div class="callout danger">
             <strong>Always provide a valid user-controlled receiver address.</strong>
@@ -134,7 +135,7 @@
             </div>
             <p>This documentation describes the behavior of the Bitcoin Universe Inscribe implementation. It does not define network-wide token consensus, an authentication policy, wallet custody guarantees, or a required interpretation for every BLOCK-20 reader.</p>
           </div>
-          <div class="grid two">
+          <div class="grid three">
             <article class="card">
               <h3>For client and wallet teams</h3>
               <p>Use the API, lifecycle, and integration pages. They identify which values are client inputs, which are server-generated, how payment is detected, and what a returned status does and does not prove.</p>
@@ -144,6 +145,11 @@
               <h3>For reader and indexer teams</h3>
               <p>Use the payload specification and conformance vectors. The source implementation writes a recognizable profile, but it does not ship a complete public state-transition specification for independent readers.</p>
               <a href="conformance.html">Open conformance vectors</a>
+            </article>
+            <article class="card">
+              <h3>For mint integrators</h3>
+              <p>Use the dedicated mint-hash reference to distinguish the tip snapshot from a height, transaction ID, reveal block, or payload digest. It also defines the recommended canonical format and verification procedure.</p>
+              <a href="mint-hash.html">Open the mint-hash reference</a>
             </article>
           </div>
         </div>

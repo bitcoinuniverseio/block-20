@@ -13,7 +13,7 @@ For example, the API currently accepts decimal and zero amounts. Documentation m
 
 Update this repository whenever a source change affects any of the following:
 
-- emitted JSON fields, serialization, defaults, carrier, or MIME type;
+- emitted JSON fields, serialization, defaults, carrier, MIME type, or mint-hash selection timing;
 - order request or response fields;
 - validation, error behavior, or authentication assumptions;
 - commit address, reveal, receiver, fee, retry, or expiry behavior;
@@ -27,7 +27,7 @@ For a behavior change, update the relevant items together:
 1. [SPEC.md](SPEC.md).
 2. The matching static page or pages.
 3. [llms.txt](llms.txt).
-4. [schemas/block20-inscribe-payload.schema.json](schemas/block20-inscribe-payload.schema.json), if emitted shape changes.
+4. [schemas/block20-inscribe-payload.schema.json](schemas/block20-inscribe-payload.schema.json), if emitted shape changes, and [schemas/block20-mint-hash.profile.schema.json](schemas/block20-mint-hash.profile.schema.json), if canonical mint-hash guidance changes.
 5. [conformance.html](conformance.html), if a testable behavior changes.
 6. [CHANGELOG.md](CHANGELOG.md), including compatibility impact and linked source change.
 
@@ -37,6 +37,7 @@ For a behavior change, update the relevant items together:
 - Separate API input names from emitted payload names.
 - State default behavior as exercised through public endpoints, not only a helper function.
 - Flag state that is determined by an external reader or indexer rather than the writer.
+- For mints, distinguish the backend-observed tip snapshot from the reveal confirmation block, transaction IDs, and any reader freshness or reorganization policy.
 - Do not suggest that a successful HTTP response proves an on-chain reveal or accepted token state.
 - Do not omit custody or destination implications of server-assisted reveal.
 - Avoid the U+2014 punctuation character in documentation.

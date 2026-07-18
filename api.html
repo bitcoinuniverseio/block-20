@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="REST API contract for Bitcoin Universe Inscribe BLOCK-20 orders, index data, and reveal operations.">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#120d09">
     <title>BLOCK-20 API reference | Bitcoin Universe</title>
     <link rel="stylesheet" href="site.css">
   </head>
@@ -18,6 +18,7 @@
           <a href="api.html" aria-current="page">API</a>
           <a href="lifecycle.html">Lifecycle</a>
           <a href="guide.html">Integration</a>
+          <a href="mint-hash.html">Mint hash</a>
           <a href="conformance.html">Conformance</a>
         </nav>
         <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/block20/block20.controller.ts" target="_blank" rel="noreferrer">API controller</a>
@@ -123,9 +124,17 @@
               </tbody>
             </table>
           </div>
+          <div class="callout warn" style="margin-top:16px">
+            <strong>Mint hash is selected by the server at order construction.</strong>
+            Submit normal mint requests without <code>hash</code>. The writer performs a fresh configured-tip lookup for each order, stores the resulting <code>blockHash</code>, and includes it in <code>inscriptionJson</code>. A prior <code>GET /block20/latest-block</code> response is useful for display only, it is not a value to prefill or expect to match a later order. <a href="mint-hash.html">Read the mint-hash reference</a>.
+          </div>
           <div class="callout danger" style="margin-top:16px">
-            <strong>Persist receiver information client-side.</strong>
-            Public order reads intentionally omit <code>receiverAddress</code>, <code>feeRate</code>, retry counters, detailed broadcast errors, and all signing secrets. Retain the destination you showed the user along with the returned order data.
+            <strong>Preserve the complete issuance evidence client-side.</strong>
+            Public order reads intentionally omit <code>receiverAddress</code>, <code>feeRate</code>, <code>outputValue</code>, deploy inputs, retry counters, detailed broadcast errors, and all signing secrets. Retain the original request, returned <code>inscriptionJson</code>, returned <code>blockHash</code>, receiver, payment details, and reveal result together.
+          </div>
+          <div class="callout warn">
+            <strong>Use whole-number amounts and fee rates in production.</strong>
+            The request parsers currently accept decimals, but persisted amount and fee-rate columns are integer types. Decimal acceptance is not a guaranteed durable round trip or reader-compatible economic rule.
           </div>
         </div>
       </section>
@@ -176,10 +185,10 @@
             <p>These endpoints retrieve upstream data. They are useful for product UI, but neither endpoint establishes a portable protocol state machine.</p>
           </div>
           <div class="grid two">
-            <article class="card">
+            <article class="card" id="latest-block">
               <h3><code>GET /block20/latest-block</code></h3>
-              <p>Returns <code>{ hash, height }</code> after reading the configured mempool endpoint. A source failure produces a 400 error. Normal mint creation uses this endpoint's underlying server operation internally.</p>
-              <p class="small">The tip source follows global network configuration, not the supplied receiver address. A mixed-network deployment needs explicit operational review.</p>
+              <p>Returns <code>{ hash, height }</code> after reading the configured Mempool-compatible source. Internally the writer reads the current tip height and resolves that height to a block hash. A source failure produces a 400 error.</p>
+              <p class="small">Normal mint creation performs its own fresh lookup, then writes only the observed hash into the order. It does not store the height, confirmation depth, source URL, or a reorganization check. The tip source follows global network configuration, not the supplied receiver address. <a href="mint-hash.html">Mint-hash timing and verification</a>.</p>
             </article>
             <article class="card">
               <h3><code>GET /block20/tokens</code></h3>
@@ -196,7 +205,7 @@
                 <tr><td><code>limit</code></td><td>Integer text, clamped from 1 through 100. Default 20.</td></tr>
                 <tr><td><code>orderBy</code></td><td>Integer text, clamped from 0 through 100. Default 0.</td></tr>
                 <tr><td><code>orderDir</code></td><td>Only normalized <code>asc</code> remains ascending. Any other value becomes <code>desc</code>.</td></tr>
-                <tr><td>Freshness and fallback</td><td>Results are cached for 60 seconds, with up to 256 cached keys. Configured indexers are tried in sequence. A cached result may be returned when all sources fail; otherwise the endpoint returns 503.</td></tr>
+                <tr><td>Freshness and fallback</td><td>Fresh normal results are cached for 60 seconds, with up to 256 cached keys. Configured indexers are tried in sequence. When every source fails, the service can return the same cached key as a stale fallback; otherwise the endpoint returns 503.</td></tr>
               </tbody>
             </table>
           </div>
