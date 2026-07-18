@@ -1,37 +1,51 @@
-# BLOCK-20 | Bitcoin Universe Protocol Reference
+# BLOCK-20
 
-> Human docs: index.html
-> Field reference: reference.html
-> Network: Bitcoin
-> Classification: Block-hash anchored token profile
+> The Bitcoin Universe Inscribe BLOCK-20 message profile.
 
-## Summary
+## Chain and carrier
 
-A Universe Inscribe profile that pairs BRC-20-like operations with an optional Bitcoin block hash for block-aware mint records.
+- Chain: Bitcoin
+- Carrier: Inscribe JSON profile
+
+## Overview
+
+BLOCK-20 in this repository documents the payload contract exposed by Bitcoin Universe Inscribe. It supports deploy, mint, and transfer messages, with mint operations optionally bound to a Bitcoin block hash.
 
 ## State model
 
-Text inscriptions interpreted as BLOCK-20 deploy, mint, and transfer messages by compatible indexers and the Universe integration.
+This is an application-facing profile. Its payloads are useful only when the builder, API, and consuming indexer agree on the same version and validation behavior.
 
 ## Lifecycle
 
-1. Deploy ticker
-2. Read latest block
-3. Mint with hash
-4. Transfer
+1. Deploy the ticker with a maximum supply and mint limit.
+2. Read the target block context when a block-bound mint is required.
+3. Mint using the ticker, amount, and block hash.
+4. Transfer according to the consuming BLOCK-20 reader.
 
-## Operations
+## Rules
 
-- Deploy: Defines max supply, mint limit, and an optional human description.
-- Mint: Records an amount and an associated Bitcoin block hash.
-- Transfer: Creates a transfer message for an amount of an existing ticker.
+- p is block-20 for every supported payload.
+- deploy supplies max and lim, with application defaults only when the builder explicitly applies them.
+- mint carries amt and can carry a 64-character Bitcoin block hash.
+- transfer carries a positive amt.
+- A valid JSON object is not enough: the target reader must support this profile version.
+- Keep the profile version and source application in integration records.
 
-## Safety
+## Field reference
 
-1. BLOCK-20 is documented here as a Universe Inscribe implementation profile. Do not assume interoperability with an unverified third-party reader.
-2. Fetch the block hash from a trusted chain source immediately before minting and preserve the exact payload.
-3. Treat ticker precedence, ordering, and transfer settlement as indexer rules. Test with a compatible indexer before production use.
+- p (string, required: yes): Literal block-20.
+- op (string, required: yes): deploy, mint, or transfer.
+- tick (string, required: yes): Application ticker identifier.
+- max (integer string, required: deploy): Requested maximum supply.
+- lim (integer string, required: deploy): Requested mint limit.
+- des (string, required: no): Optional human description.
+- hash (64-character hex, required: mint): Bitcoin block hash for block-aware mints.
+- amt (integer string, required: mint / transfer): Requested amount.
 
-## Sources
+## Primary sources
 
-- Universe Inscribe: https://inscribe.bitcoinuniverse.io
+- Bitcoin Universe Inscribe BLOCK-20 builder: https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20
+
+## Operational caution
+
+This repository specifies the Bitcoin Universe Inscribe profile. It does not claim to define a network-wide consensus standard outside compatible implementations.
