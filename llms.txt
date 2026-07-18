@@ -1,51 +1,105 @@
-# BLOCK-20
+# BLOCK-20, Bitcoin Universe Inscribe implementation profile
 
-> The Bitcoin Universe Inscribe BLOCK-20 message profile.
+## Scope
 
-## Chain and carrier
+This document describes the BLOCK-20 writer and order API implemented by Bitcoin Universe Inscribe. It is not Bitcoin consensus and does not guarantee acceptance or state semantics in every external BLOCK-20 reader or indexer.
 
-- Chain: Bitcoin
-- Carrier: Inscribe JSON profile
+Source of truth: https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20
 
-## Overview
+## Documentation map
 
-BLOCK-20 in this repository documents the payload contract exposed by Bitcoin Universe Inscribe. It supports deploy, mint, and transfer messages, with mint operations optionally bound to a Bitcoin block hash.
+- Overview: index.html
+- Payload specification: reference.html
+- REST API: api.html
+- Commit/reveal lifecycle: lifecycle.html
+- Integration guide: guide.html
+- Conformance fixtures: conformance.html
+- Durable prose specification: SPEC.md
+- JSON Schema: schemas/block20-inscribe-payload.schema.json
 
-## State model
+## Carrier
 
-This is an application-facing profile. Its payloads are useful only when the builder, API, and consuming indexer agree on the same version and validation behavior.
+- Bitcoin Ordinals-style inscription, not OP_RETURN.
+- Content type: text/plain;charset=utf-8.
+- Content: compact UTF-8 JSON.stringify output.
+- The REST order request is not the on-chain payload. Use returned inscriptionJson as the output record.
 
-## Lifecycle
+## Emitted payloads
 
-1. Deploy the ticker with a maximum supply and mint limit.
-2. Read the target block context when a block-bound mint is required.
-3. Mint using the ticker, amount, and block hash.
-4. Transfer according to the consuming BLOCK-20 reader.
+Deploy:
 
-## Rules
+```json
+{"p":"block-20","op":"deploy","tick":"BLK","max":"21000000","lim":"1000","des":"optional"}
+```
 
-- p is block-20 for every supported payload.
-- deploy supplies max and lim, with application defaults only when the builder explicitly applies them.
-- mint carries amt and can carry a 64-character Bitcoin block hash.
-- transfer carries a positive amt.
-- A valid JSON object is not enough: the target reader must support this profile version.
-- Keep the profile version and source application in integration records.
+Mint:
 
-## Field reference
+```json
+{"p":"block-20","op":"mint","tick":"BLK","amt":"1000","hash":"<server-fetched-tip-hash>"}
+```
 
-- p (string, required: yes): Literal block-20.
-- op (string, required: yes): deploy, mint, or transfer.
-- tick (string, required: yes): Application ticker identifier.
-- max (integer string, required: deploy): Requested maximum supply.
-- lim (integer string, required: deploy): Requested mint limit.
-- des (string, required: no): Optional human description.
-- hash (64-character hex, required: mint): Bitcoin block hash for block-aware mints.
-- amt (integer string, required: mint / transfer): Requested amount.
+Transfer:
 
-## Primary sources
+```json
+{"p":"block-20","op":"transfer","tick":"BLK","amt":"250"}
+```
 
-- Bitcoin Universe Inscribe BLOCK-20 builder: https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20
+Fields:
 
-## Operational caution
+- p: always literal block-20, injected by the writer.
+- op: deploy, mint, or transfer, derived from API action.
+- tick: copied from API input without normalization.
+- max: deploy only, from maxSupply or default "21000000".
+- lim: deploy only, from limitMint or normalized amount.
+- des: deploy only, truthy description only.
+- amt: mint/transfer only, string form of normalized amount.
+- hash: mint only, injected from configured live Bitcoin tip source. API callers do not supply it.
 
-This repository specifies the Bitcoin Universe Inscribe profile. It does not claim to define a network-wide consensus standard outside compatible implementations.
+## Important current behavior
+
+- POST /block20/order requires nonblank string action and tick, but does not validate ticker syntax, maxSupply, limitMint, description, or receiverAddress.
+- action must ultimately match exactly deploy, mint, or transfer.
+- amount defaults to 0, accepts finite numbers/numeric strings up to JavaScript safe integer range, and currently accepts decimals.
+- In the public order path, missing limitMint uses normalized amount. A deploy with missing limitMint and amount emits lim: "0". Missing mint/transfer amount emits amt: "0".
+- feeRate defaults to 5 and accepts 1 through 10000. repeatCount defaults to 1 and accepts 1 through 100, floored. outputValue below 330 sats becomes 0.
+- The current writer trims but does not locally validate the mint hash shape.
+- A reader or indexer can impose stricter rules. API acceptance is not reader acceptance.
+
+## API
+
+Direct paths are under /block20. Deployments may reverse-proxy them under /api/block20.
+
+- GET /block20/tokens?ticker&start&limit&orderBy&orderDir returns { total, tokens } from configured external indexers.
+- GET /block20/latest-block returns { hash, height } from configured mempool source.
+- POST /block20/order creates an order and returns orderId, commitAddress, commitAmount, estimatedCost, inscriptionJson, blockHash, status, network, timestamps, and revealTxid.
+- GET /block20/order/:orderId returns the public order object.
+- POST /block20/order/:orderId/reveal accepts commitTxid, optional commitVout, optional commitAmount, then returns txHex, revealTxid, and optional broadcastError.
+
+POST success uses current Nest default HTTP 201. A reveal can return 201 while revealTxid is null and broadcastError is present. Treat that as failure, not success.
+
+## Lifecycle and safety
+
+1. The service creates a server-held commit key and generated commit address.
+2. Client records the returned order and explicitly provides a valid user-controlled receiver address.
+3. Client funds an intentional output at least commitAmount at commitAddress.
+4. Monitor checks pending orders every 10 seconds, finds an eligible UTXO, signs and broadcasts reveal.
+5. Client polls order status and verifies revealTxid and the compatible reader result.
+
+Known statuses: awaiting_payment, revealed, reveal_failed, reveal_error, expired.
+
+Initial expiry is one hour. The monitor retries reveal_failed orders up to five times. Expiry is monitor behavior rather than an absolute reveal API gate.
+
+Empty receiverAddress is unsafe: reveal falls back to the generated commitAddress, controlled by server-held key material. A nonempty malformed receiver can fail during reveal. Public order reads omit receiverAddress, broadcastError, retry count, and secrets, so clients must retain these records.
+
+repeatCount is not a payload field. Direct BLOCK-20 orders multiply funding but currently produce one payload and one monitor reveal attempt. Do not represent it as multi-mint support.
+
+## Operations
+
+- Backend persists WIF and inscription script data in block20_orders. Treat database, backups, and reveal worker as sensitive infrastructure.
+- Relevant configuration includes BLOCK20_API_URL, optional BLOCK20_API_URLS, IS_TEST, mempool endpoint configuration, and database configuration.
+- Token results are external-indexer data, cached for 60 seconds. On source failure without cached result, GET /block20/tokens returns 503.
+- Preserve order ID, request ID, receiver address, network, inscriptionJson, payment transaction, and reveal transaction for support and verification.
+
+## Conformance
+
+Use schemas/block20-inscribe-payload.schema.json and conformance.html to test writer output. Add end-to-end tests for payment detection, reveal success/failure, retries, expiry, destination safety, and the target reader or indexer.
