@@ -3,161 +3,196 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Implementation-accurate documentation for the Bitcoin Universe Inscribe BLOCK-20 profile.">
+    <meta name="description" content="From ticker to Bitcoin inscription: deploy, mint, and prepare BLOCK-20 token actions with Universe Inscribe.">
     <meta name="theme-color" content="#120d09">
-    <title>BLOCK-20 documentation | Bitcoin Universe</title>
+    <title>BLOCK-20 | From ticker to Bitcoin inscription</title>
     <link rel="stylesheet" href="site.css">
   </head>
-  <body>
-    <header class="site-header">
+  <body class="landing-page">
+    <header class="site-header landing-header">
       <div class="nav-wrap">
-        <a class="brand" href="index.html" aria-label="BLOCK-20 documentation home">
-          <span class="brand-mark">B20</span><span>BLOCK-20 docs</span>
+        <a class="brand" href="index.html" aria-label="BLOCK-20 home">
+          <span class="brand-mark">B20</span><span>BLOCK-20</span>
         </a>
-        <nav aria-label="Primary navigation">
-          <a href="index.html" aria-current="page">Overview</a>
-          <a href="reference.html">Payload spec</a>
-          <a href="api.html">API</a>
-          <a href="lifecycle.html">Lifecycle</a>
-          <a href="guide.html">Integration</a>
-          <a href="mint-hash.html">Mint hash</a>
-          <a href="conformance.html">Conformance</a>
+        <nav class="landing-nav" aria-label="Primary navigation">
+          <a href="#how-it-works">How it works</a>
+          <a href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=mint" target="_blank" rel="noreferrer">Mint</a>
+          <a href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=deploy" target="_blank" rel="noreferrer">Deploy</a>
+          <a href="#builders">For builders</a>
         </nav>
-        <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20" target="_blank" rel="noreferrer">Implementation source</a>
+        <a class="nav-cta" href="https://inscribe.bitcoinuniverse.io/?tab=block20" target="_blank" rel="noreferrer">Open BLOCK-20</a>
       </div>
     </header>
 
     <main>
-      <div class="wrap hero">
-        <div>
-          <p class="eyebrow">Bitcoin Universe Inscribe profile</p>
-          <h1>BLOCK-20, documented from the implementation.</h1>
-          <p class="lead">The practical reference for the emitted inscription payload, the order API, and the server-assisted commit and reveal flow used by Bitcoin Universe Inscribe.</p>
+      <section class="wrap landing-hero" aria-labelledby="hero-title">
+        <div class="landing-hero-copy">
+          <p class="eyebrow">BLOCK-20 on Bitcoin</p>
+          <h1 id="hero-title">From ticker to Bitcoin inscription.</h1>
+          <p class="lead">Explore indexed BLOCK-20 deployments, then deploy, mint, or prepare a transfer in Universe Inscribe. Review the generated order and cost, fund one Bitcoin payment, and follow the on-chain reveal.</p>
           <div class="actions">
-            <a class="button" href="reference.html">Read the payload specification</a>
-            <a class="button secondary" href="mint-hash.html">Understand the mint hash</a>
+            <a class="button" href="https://inscribe.bitcoinuniverse.io/?tab=block20" target="_blank" rel="noreferrer">Open BLOCK-20 <span aria-hidden="true">&rarr;</span></a>
+            <a class="button secondary" href="#how-it-works">See how it works</a>
           </div>
+          <p class="hero-proof">Deploy <span aria-hidden="true">&#183;</span> Mint <span aria-hidden="true">&#183;</span> Transfer <span aria-hidden="true">&#183;</span> Verify on-chain</p>
         </div>
-        <aside class="hero-panel" aria-label="BLOCK-20 scope at a glance">
-          <dl>
-            <div><dt>Carrier</dt><dd>UTF-8 JSON inside an Ordinals inscription, content type <code>text/plain;charset=utf-8</code>.</dd></div>
-            <div><dt>Operations</dt><dd><code>deploy</code>, <code>mint</code>, and <code>transfer</code>.</dd></div>
-            <div><dt>State authority</dt><dd>The reader or indexer determines token state. This site does not define Bitcoin consensus.</dd></div>
-            <div><dt>Integration model</dt><dd>Create an order, fund its generated commit address, then observe the reveal transaction.</dd></div>
-          </dl>
+
+        <aside class="hero-journey" aria-label="Your first BLOCK-20 inscription">
+          <div class="journey-topline">
+            <p class="kicker">Your first inscription</p>
+            <span class="journey-badge">3 steps</span>
+          </div>
+          <ol class="journey-list">
+            <li>
+              <strong>Choose an action</strong>
+              <span>Deploy, mint, or transfer to a Bitcoin address you control.</span>
+            </li>
+            <li>
+              <strong>Review the exact payload</strong>
+              <span>See the inscription and the one-time funding amount before you pay.</span>
+            </li>
+            <li>
+              <strong>Fund once, then verify</strong>
+              <span>We reveal the inscription after funding. You can track the result on-chain.</span>
+            </li>
+          </ol>
+          <a class="text-link" href="#how-it-works">See the flow <span aria-hidden="true">&darr;</span></a>
         </aside>
-      </div>
+      </section>
 
-      <section>
+      <section class="trust-band" aria-label="BLOCK-20 value summary">
+        <div class="wrap trust-band-inner">
+          <p><span>01</span> Choose deploy, mint, or transfer</p>
+          <p><span>02</span> Review before BTC leaves your wallet</p>
+          <p><span>03</span> Verify the on-chain reveal</p>
+        </div>
+      </section>
+
+      <section id="how-it-works" class="landing-section landing-section-warm">
+        <div class="wrap">
+          <div class="section-intro section-intro-centered">
+            <p class="eyebrow">How it works</p>
+            <h2>From intent to inscription in three clear steps.</h2>
+            <p>BLOCK-20 handles the commit and reveal workflow behind a simple, visible path. You stay in control of the action, destination, and payment review.</p>
+          </div>
+
+          <div class="grid three journey-grid">
+            <article class="card journey-card">
+              <p class="kicker">01</p>
+              <h3>Create your action</h3>
+              <p>Pick deploy, mint, or transfer. Enter the ticker and details, then choose the Bitcoin address that should receive the inscription.</p>
+            </article>
+            <article class="card journey-card">
+              <p class="kicker">02</p>
+              <h3>Approve what goes on-chain</h3>
+              <p>Review the exact inscription payload, the generated commit address, the required Bitcoin amount, and the current fee rate.</p>
+            </article>
+            <article class="card journey-card">
+              <p class="kicker">03</p>
+              <h3>Fund and follow the reveal</h3>
+              <p>Send one dedicated Bitcoin output. Once it is detected, the service reveals the inscription and returns a transaction ID to verify.</p>
+            </article>
+          </div>
+
+          <p class="section-action"><a class="button" href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=mint" target="_blank" rel="noreferrer">Start with a mint <span aria-hidden="true">&rarr;</span></a></p>
+        </div>
+      </section>
+
+      <section id="what-you-can-do" class="landing-section">
         <div class="wrap">
           <div class="section-intro">
             <div>
-              <p class="eyebrow">Start with the right layer</p>
-              <h2>One name, three contracts.</h2>
+              <p class="eyebrow">Choose your path</p>
+              <h2>Start with the action you came for.</h2>
             </div>
-            <p>Previous documentation treated the JSON object as the whole protocol. In practice, an integration must distinguish between the on-chain payload, the REST request that produces it, and the operational flow that funds and reveals it.</p>
+            <p>Use the live BLOCK-20 workspace when you are ready to create. Keep this guide open when you want to understand the payment or protocol details.</p>
           </div>
-          <div class="grid three">
-            <article class="card">
-              <p class="kicker">01 / Payload</p>
-              <h3>What reaches the chain</h3>
-              <p>The writer creates compact JSON, wraps it in an <code>ord</code> inscription envelope, and exposes the exact bytes as <code>inscriptionJson</code> on the order.</p>
-              <p><a href="reference.html">Payload fields and emitted defaults</a></p>
+
+          <div class="grid three path-grid">
+            <article class="card path-card">
+              <p class="kicker">For minters</p>
+              <h3>Mint a listed token</h3>
+              <p>Look up a ticker, review its indexed mint limit, and create an inscription order with the current block reference added automatically.</p>
+              <a href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=mint" target="_blank" rel="noreferrer">Open mint workspace <span aria-hidden="true">&rarr;</span></a>
             </article>
-            <article class="card">
-              <p class="kicker">02 / REST API</p>
-              <h3>What your client sends</h3>
-              <p>The order request uses names such as <code>action</code>, <code>maxSupply</code>, and <code>limitMint</code>. The server injects <code>p</code>, and it injects <code>hash</code> for normal mints.</p>
-              <p><a href="api.html">Requests, responses, limits, and errors</a></p>
+            <article class="card path-card">
+              <p class="kicker">For creators</p>
+              <h3>Deploy a new ticker</h3>
+              <p>Set a ticker, maximum supply, mint limit, and optional description, then preview the inscription before creating your order.</p>
+              <a href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=deploy" target="_blank" rel="noreferrer">Open deploy workspace <span aria-hidden="true">&rarr;</span></a>
             </article>
-            <article class="card">
-              <p class="kicker">03 / Lifecycle</p>
-              <h3>What spends funds</h3>
-              <p>The service generates a commit key and address, detects funding, signs the reveal, and broadcasts it. This is not a direct client-signed inscription flow.</p>
-              <p><a href="lifecycle.html">Payment, reveal, expiry, and retry behavior</a></p>
+            <article class="card path-card">
+              <p class="kicker">For holders</p>
+              <h3>Create a transfer</h3>
+              <p>Write a transfer inscription for a chosen ticker and amount, then send the revealed inscription to your selected Bitcoin address.</p>
+              <a href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=transfer" target="_blank" rel="noreferrer">Open transfer workspace <span aria-hidden="true">&rarr;</span></a>
             </article>
           </div>
         </div>
       </section>
 
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div>
-              <p class="eyebrow">Read before integrating</p>
-              <h2>Critical facts hidden by a generic payload example.</h2>
-            </div>
-            <p>These are current implementation facts. They are deliberately separate from any desired future protocol rules or third-party indexer behavior.</p>
+      <section class="landing-section landing-section-warm">
+        <div class="wrap proof-layout">
+          <div>
+            <p class="eyebrow">Designed for a clear handoff</p>
+            <h2>Know what you are funding before you fund it.</h2>
+            <p class="lead compact-lead">A BLOCK-20 order makes the important moments visible: your receiving address, the compact inscription JSON, the exact commit address, and the amount required to continue.</p>
           </div>
-          <div class="callout warn">
-            <strong>Mint hashes are server-generated.</strong>
-            <code>POST /block20/order</code> snapshots the configured Bitcoin tip while creating every normal <code>mint</code> and emits the resulting block ID as <code>hash</code>. A client does not supply it. The snapshot is not the later reveal block, and it is not a transaction or inscription ID. <a href="mint-hash.html">Read the full mint-hash reference</a>.
-          </div>
-          <div class="callout danger">
-            <strong>Always provide a valid user-controlled receiver address.</strong>
-            An omitted or empty <code>receiverAddress</code> makes reveal fall back to the generated commit address. That address is controlled by server-held key material, and it is not returned as a destination field in later order reads.
-          </div>
-          <div class="callout warn">
-            <strong>Do not infer stricter token rules from the current writer.</strong>
-            The public order endpoint accepts zero and decimal amounts, and it does not validate ticker syntax or deployment <code>max</code>/<code>lim</code> values. Compatibility depends on the consuming indexer.
-          </div>
-          <div class="callout ok">
-            <strong>Keep the evidence that matters.</strong>
-            Retain the order ID, exact <code>inscriptionJson</code>, selected receiver address, commit transaction, reveal transaction, network, and the indexer used to evaluate the result.
+          <div class="proof-grid">
+            <article class="proof-card">
+              <p class="kicker">Payload</p>
+              <h3>Exact bytes, visible first</h3>
+              <p>The order returns the exact JSON that will be inscribed, so you do not need to reconstruct it after payment.</p>
+            </article>
+            <article class="proof-card">
+              <p class="kicker">Payment</p>
+              <h3>One intentional output</h3>
+              <p>Fund the returned address with one dedicated Bitcoin output at or above the displayed amount.</p>
+            </article>
+            <article class="proof-card">
+              <p class="kicker">Verification</p>
+              <h3>Reveal, then check your reader</h3>
+              <p>Use the returned reveal transaction and a compatible reader or indexer to inspect the final result.</p>
+            </article>
           </div>
         </div>
       </section>
 
-      <section>
+      <section id="builders" class="landing-section">
         <div class="wrap">
-          <div class="section-intro">
+          <div class="builder-callout">
             <div>
-              <p class="eyebrow">Integration path</p>
-              <h2>From request to verifiable inscription.</h2>
+              <p class="eyebrow">For builders and protocol teams</p>
+              <h2>All the technical detail, when you need it.</h2>
+              <p>Read the emitted payload, order API, mint-hash rules, lifecycle behavior, and conformance vectors without making a first-time minter wade through them first.</p>
             </div>
-            <p>The operational stages are as important as the JSON fields. Treat the order response as a payment instruction, not as proof that a token has been accepted by an indexer.</p>
-          </div>
-          <div class="flow">
-            <article><h3>Create an order</h3><p>Submit an API request with the action, ticker, fee rate, and an explicit receiver address. Record the returned payload and payment details before showing a payment action.</p></article>
-            <article><h3>Fund the commit address</h3><p>Send an intentional payment to the returned <code>commitAddress</code>, using the returned <code>commitAmount</code> as the minimum required output value. Do not mix unrelated funds into that address.</p></article>
-            <article><h3>Allow or trigger reveal</h3><p>The monitor checks eligible UTXOs and attempts a reveal. An advanced API caller can also submit a commit outpoint to the reveal endpoint, but that endpoint is not an authorization proof.</p></article>
-            <article><h3>Verify on chain and in the target reader</h3><p>Confirm the reveal transaction contains the expected bytes, then query the same compatible indexer or reader that will display or settle the result.</p></article>
+            <div class="builder-links" aria-label="Developer documentation">
+              <a href="guide.html#quick-start">Integration quick start <span aria-hidden="true">&rarr;</span></a>
+              <a href="reference.html">Payload specification <span aria-hidden="true">&rarr;</span></a>
+              <a href="api.html">Order API <span aria-hidden="true">&rarr;</span></a>
+              <a href="mint-hash.html">Mint-hash reference <span aria-hidden="true">&rarr;</span></a>
+              <a href="conformance.html">Conformance vectors <span aria-hidden="true">&rarr;</span></a>
+            </div>
           </div>
         </div>
       </section>
 
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div>
-              <p class="eyebrow">Scope and authority</p>
-              <h2>Accurate by design, not a universal consensus claim.</h2>
-            </div>
-            <p>This documentation describes the behavior of the Bitcoin Universe Inscribe implementation. It does not define network-wide token consensus, an authentication policy, wallet custody guarantees, or a required interpretation for every BLOCK-20 reader.</p>
+      <section class="landing-final">
+        <div class="wrap landing-final-inner">
+          <p class="eyebrow">Ready when you are</p>
+          <h2>Make your next token action count.</h2>
+          <p>Open BLOCK-20 in Universe Inscribe to mint, deploy, or transfer. Review the order, fund once, and verify the reveal on Bitcoin.</p>
+          <div class="actions">
+            <a class="button" href="https://inscribe.bitcoinuniverse.io/?tab=block20&amp;action=mint" target="_blank" rel="noreferrer">Open BLOCK-20 <span aria-hidden="true">&rarr;</span></a>
+            <a class="button secondary" href="guide.html#quick-start">Read the quick start</a>
           </div>
-          <div class="grid three">
-            <article class="card">
-              <h3>For client and wallet teams</h3>
-              <p>Use the API, lifecycle, and integration pages. They identify which values are client inputs, which are server-generated, how payment is detected, and what a returned status does and does not prove.</p>
-              <a href="guide.html">Open the integration guide</a>
-            </article>
-            <article class="card">
-              <h3>For reader and indexer teams</h3>
-              <p>Use the payload specification and conformance vectors. The source implementation writes a recognizable profile, but it does not ship a complete public state-transition specification for independent readers.</p>
-              <a href="conformance.html">Open conformance vectors</a>
-            </article>
-            <article class="card">
-              <h3>For mint integrators</h3>
-              <p>Use the dedicated mint-hash reference to distinguish the tip snapshot from a height, transaction ID, reveal block, or payload digest. It also defines the recommended canonical format and verification procedure.</p>
-              <a href="mint-hash.html">Open the mint-hash reference</a>
-            </article>
-          </div>
+          <p class="small landing-note">Token state is evaluated by the compatible reader or indexer you choose. Read the <a href="reference.html">payload specification</a> before using production funds.</p>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <div class="wrap"><p>BLOCK-20 documentation, implementation target: <a href="https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20" target="_blank" rel="noreferrer">Bitcoin Universe Inscribe backend/src/block20</a>. Revalidate behavior against the deployed release before sending funds.</p></div>
+      <div class="wrap"><p>BLOCK-20 is powered by <a href="https://inscribe.bitcoinuniverse.io" target="_blank" rel="noreferrer">Universe Inscribe</a>. Verify the exact inscription and reader result before relying on a token outcome.</p></div>
     </footer>
   </body>
 </html>
