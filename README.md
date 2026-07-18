@@ -1,34 +1,55 @@
 # BLOCK-20 documentation
 
-Bitcoin Universe documentation for BLOCK-20 on Bitcoin.
+Implementation-accurate documentation for the BLOCK-20 writer and order flow in [Bitcoin Universe Inscribe](https://github.com/bitcoinuniverse/inscribe).
 
-## What this covers
+This repository documents a Bitcoin Universe application profile. It is not a network-wide consensus specification and it does not guarantee compatibility with every independent BLOCK-20 reader or indexer.
 
-BLOCK-20 in this repository documents the payload contract exposed by Bitcoin Universe Inscribe. It supports deploy, mint, and transfer messages, with mint operations optionally bound to a Bitcoin block hash.
+## Start here
 
-## State model
+- [Overview](index.html): scope, architecture, and the facts that affect every integration.
+- [Payload specification](reference.html): emitted JSON, carrier, field mapping, defaults, and validation boundary.
+- [API reference](api.html): order creation, order reads, reveal, tip lookup, token list, and error behavior.
+- [Lifecycle](lifecycle.html): commit funding, server-assisted reveal, status states, expiry, retry, custody, and receiver safety.
+- [Integration guide](guide.html): product workflow, client validation, payment UX, recovery, and operations.
+- [Conformance](conformance.html): source-driven fixtures and end-to-end test matrix.
+- [Prose specification](SPEC.md): durable implementation specification and change policy.
+- [Payload JSON Schema](schemas/block20-inscribe-payload.schema.json): shape validation for current emitted payloads.
 
-This is an application-facing profile. Its payloads are useful only when the builder, API, and consuming indexer agree on the same version and validation behavior.
+## What this set corrects
 
-## Documentation site
+The earlier documentation described only generic payload shapes. The current set documents the actual application behavior:
 
-- Overview: [index.html](index.html)
-- Field reference: [reference.html](reference.html)
-- Build and verification playbook: [guide.html](guide.html)
+- The payload is compact UTF-8 JSON in an Ordinals inscription with content type `text/plain;charset=utf-8`.
+- REST request fields differ from on-chain payload fields. The server injects `p`, and normal mint orders inject a live block `hash`.
+- The API creates a server-assisted commit and reveal order. A client does not construct the final reveal transaction at order creation time.
+- A valid, user-controlled `receiverAddress` is essential. An empty receiver falls back to the server-generated commit address at reveal.
+- The public writer currently permits zero and decimal amounts, and it does not validate ticker, max supply, or mint limit semantics. Those are compatibility concerns, not guarantees.
+- Direct `repeatCount` multiplies funding but does not create multiple direct BLOCK-20 inscription payloads or monitor reveals.
 
-## Core rules
+## Source of truth
 
-- p is block-20 for every supported payload.
-- deploy supplies max and lim, with application defaults only when the builder explicitly applies them.
-- mint carries amt and can carry a 64-character Bitcoin block hash.
-- transfer carries a positive amt.
-- A valid JSON object is not enough: the target reader must support this profile version.
-- Keep the profile version and source application in integration records.
+The documentation is grounded in these implementation locations:
 
-## Source material
+- [`backend/src/block20`](https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20)
+- [`backend/src/inscribe/bitcoin.utils.ts`](https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/inscribe/bitcoin.utils.ts)
+- [`backend/src/common/bitcoin-validation.ts`](https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/common/bitcoin-validation.ts)
+- [`frontend/src/components/block20`](https://github.com/bitcoinuniverse/inscribe/tree/main/frontend/src/components/block20)
 
-- [Bitcoin Universe Inscribe BLOCK-20 builder](https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20)
+Always compare this documentation with the deployed source before sending funds. The returned `inscriptionJson` is the concrete record to display, save, and verify for a created order.
 
-## Scope
+## Local preview
 
-This repository specifies the Bitcoin Universe Inscribe profile. It does not claim to define a network-wide consensus standard outside compatible implementations.
+This is a static documentation site with no build step. Serve the repository with any local static HTTP server, then open `index.html`. Check every navigation link at both desktop and narrow mobile widths.
+
+## Documentation maintenance
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing behavior claims. If a source change affects payload serialization, validation, transaction construction, lifecycle, or compatibility, update:
+
+1. `SPEC.md`.
+2. The relevant HTML page and `llms.txt`.
+3. The payload schema and conformance fixtures when applicable.
+4. `CHANGELOG.md` with the compatibility impact.
+
+## License
+
+See [LICENSE](LICENSE).

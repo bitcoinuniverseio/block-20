@@ -1,4 +1,212 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Implementation and verification guide for BLOCK-20."><meta name="theme-color" content="#071016"><title>BLOCK-20 build guide | Bitcoin Universe Docs</title><style>
-:root{--accent:hsl(231 88% 60%);--ink:#edf4f8;--muted:#9bb0bd;--paper:#071016;--panel:#0d1921;--line:rgba(214,239,247,.13);--soft:rgba(255,255,255,.045)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:radial-gradient(900px 480px at 82% -80px,hsla(231,90%,56%,.25),transparent 64%),radial-gradient(680px 540px at -12% 38%,hsla(309,82%,48%,.12),transparent 70%),var(--paper);font:16px/1.62 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.top{height:74px;display:flex;gap:22px;align-items:center;max-width:1200px;margin:auto;padding:0 26px;border-bottom:1px solid var(--line);position:relative;z-index:4}.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:760;letter-spacing:-.02em}.brand b{display:grid;place-items:center;width:30px;height:30px;border:1px solid color-mix(in srgb,var(--accent),white 25%);border-radius:9px;color:#081115;background:var(--accent);font-size:11px;box-shadow:0 0 30px color-mix(in srgb,var(--accent),transparent 65%)}nav{display:flex;gap:3px;margin-left:18px}nav a,.repo{color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:8px;font-size:14px}nav a:hover,nav a.active{color:var(--ink);background:var(--soft)}.repo{margin-left:auto;border:1px solid var(--line);color:var(--ink)}.wrap{max-width:1200px;margin:auto;padding:0 26px}.hero{min-height:520px;padding:82px 0 56px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:55px;align-items:center}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:800}.hero h1{font-size:clamp(48px,7.7vw,94px);letter-spacing:-.078em;line-height:.94;margin:13px 0 22px;max-width:720px}.hero p{color:#bed0da;font-size:20px;line-height:1.55;max-width:690px;margin:0}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}.chip{padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:#c3d1d8;background:rgba(255,255,255,.025);font-size:12px}.cta{display:inline-flex;align-items:center;gap:9px;margin-top:29px;padding:11px 15px;background:var(--accent);color:#061118;text-decoration:none;font-weight:800;border-radius:10px;box-shadow:0 12px 32px color-mix(in srgb,var(--accent),transparent 77%)}.orbit{height:380px;position:relative;display:grid;place-items:center;isolation:isolate}.orbit:before,.orbit:after{content:"";position:absolute;border:1px solid color-mix(in srgb,var(--accent),transparent 55%);border-radius:50%;z-index:-1}.orbit:before{width:310px;height:310px;transform:rotate(24deg) scaleY(.58)}.orbit:after{width:365px;height:365px;border-color:var(--line);transform:rotate(-39deg) scaleY(.33)}.core{width:168px;height:168px;border-radius:34px;display:grid;place-items:center;background:linear-gradient(140deg,color-mix(in srgb,var(--accent),white 22%),var(--accent));color:#051014;font-size:58px;font-weight:900;letter-spacing:-.11em;box-shadow:0 0 0 17px rgba(255,255,255,.028),0 0 60px color-mix(in srgb,var(--accent),transparent 58%);transform:rotate(-10deg)}.node{position:absolute;border:1px solid var(--line);background:#0b1922;color:#c8d9e1;padding:7px 9px;border-radius:8px;font-size:12px}.node.one{top:42px;right:0}.node.two{bottom:42px;left:8px}.node.three{right:22px;bottom:104px}.divider{height:1px;background:var(--line)}section{padding:82px 0}.section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:50px;margin-bottom:34px}.section-head h2{letter-spacing:-.052em;font-size:clamp(29px,4.1vw,51px);line-height:1.03;margin:6px 0 0}.section-head p{color:var(--muted);align-self:end;margin:0;font-size:17px}.grid{display:grid;gap:16px}.four{grid-template-columns:repeat(4,1fr)}.three{grid-template-columns:repeat(3,1fr)}.card{border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));border-radius:15px;padding:20px;min-width:0}.card .number{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.11em}.card h3{font-size:18px;letter-spacing:-.025em;line-height:1.2;margin:15px 0 8px}.card p{color:var(--muted);font-size:14px;margin:0}.steps{counter-reset:step}.step{counter-increment:step;position:relative;padding:22px 17px 18px 29px;border-left:1px solid var(--line)}.step:before{content:counter(step,decimal-leading-zero);position:absolute;top:22px;left:-11px;color:var(--accent);font-size:10px;font-weight:900;background:var(--paper);padding:3px}.step h3{margin:0 0 7px;font-size:17px;line-height:1.25}.step p{margin:0;color:var(--muted);font-size:14px}.callout{border-left:3px solid var(--accent);border-radius:0 12px 12px 0;background:color-mix(in srgb,var(--accent),transparent 91%);padding:20px 22px;color:#ccdae0}.callout b{display:block;color:var(--ink);margin-bottom:5px}.packet{padding:0;overflow:hidden}.packet header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line);font-size:13px;font-weight:800}.packet button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:4px 7px;cursor:pointer;font:inherit;font-size:11px}.packet button:hover{color:var(--ink)}pre{white-space:pre-wrap;overflow:auto;padding:18px;margin:0;color:#c5e7f3;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;background:#071219}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:690px;background:rgba(255,255,255,.018)}th,td{text-align:left;padding:14px 15px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:rgba(255,255,255,.025)}td{font-size:14px;color:#c0d0d8}td:first-child{font-family:ui-monospace,monospace;color:#ecf5f8;font-weight:700}tr:last-child td{border-bottom:0}.checklist{list-style:none;padding:0;margin:0;display:grid;gap:10px}.checklist li{display:flex;gap:11px;padding:13px 14px;border:1px solid var(--line);border-radius:10px;color:#c9d8de;background:rgba(255,255,255,.025)}.checklist li:before{content:'✓';display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--accent),transparent 80%);color:var(--accent);font-weight:900}.sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.source{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 16px;border:1px solid var(--line);border-radius:11px;color:var(--ink);text-decoration:none;background:rgba(255,255,255,.025)}.source small{color:var(--muted);white-space:nowrap}.footer{padding:34px 0 48px;border-top:1px solid var(--line);color:#78909e;font-size:13px}.footer a{color:#b9cad0}.guide-list{display:grid;gap:0;counter-reset:guide}.guide-list article{counter-increment:guide;display:grid;grid-template-columns:62px 1fr;gap:18px;padding:24px 0;border-bottom:1px solid var(--line)}.guide-list article:before{content:counter(guide,decimal-leading-zero);color:var(--accent);font-weight:900;font-size:14px}.guide-list h3{margin:0 0 5px;font-size:19px;letter-spacing:-.025em}.guide-list p{margin:0;color:var(--muted)}.mini{font-size:13px;color:var(--muted)}@media(max-width:800px){.top{padding:0 16px;height:auto;min-height:66px;flex-wrap:wrap;gap:8px}.brand{margin-right:auto}nav{order:3;margin:0 -8px 7px;width:100%;overflow:auto}.repo{margin:0}.wrap{padding:0 17px}.hero{grid-template-columns:1fr;padding:56px 0 26px;gap:5px;min-height:0}.hero h1{font-size:58px}.orbit{height:230px;transform:scale(.72);margin:-28px}.section-head{grid-template-columns:1fr;gap:15px}.four,.three{grid-template-columns:1fr}.sources{grid-template-columns:1fr}section{padding:55px 0}}
-</style></head><body><header class="top"><a class="brand" href="index.html"><b>B20</b><span>BLOCK-20</span></a><nav><a class="" href="index.html">Overview</a><a class="" href="reference.html">Reference</a><a class="active" href="guide.html">Build & verify</a><a href="#sources">Sources</a></nav><a class="repo" href="https://github.com/bitcoinuniverse/block-20-docs">GitHub ↗</a></header><main><div class="wrap hero" style="min-height:410px"><div><div class="eyebrow">Implementation playbook</div><h1 style="font-size:clamp(46px,7vw,82px)">Build.<br><i style="font-style:normal;color:var(--accent)">Verify.</i><br>Ship.</h1><p>BLOCK-20 is safe to integrate only when the payload, transaction layout, and reader state agree.</p><a class="cta" href="reference.html">Review fields first <span>→</span></a></div><div class="orbit" aria-hidden="true"><div class="core">✓</div><span class="node one">preflight</span><span class="node two">transaction</span><span class="node three">indexer</span></div></div><div class="divider"></div><section><div class="wrap"><div class="section-head"><div><div class="eyebrow">End-to-end builder</div><h2>A deliberate path to broadcast.</h2></div><p>Each step forms a product requirement, a test case, and a support artifact. Do not hide protocol-critical information behind a generic send button.</p></div><div class="guide-list"><article><div><h3>Choose one BLOCK-20 reader and confirm its supported profile version.</h3><p>Record the evidence for this stage so a failed preview or unexpected confirmation can be reproduced and explained.</p></div></article><article><div><h3>Build deploy payloads with explicit max and lim instead of relying on UI defaults.</h3><p>Record the evidence for this stage so a failed preview or unexpected confirmation can be reproduced and explained.</p></div></article><article><div><h3>For a block-bound mint, obtain the exact block hash from a trusted Bitcoin source and preserve the lookup timestamp.</h3><p>Record the evidence for this stage so a failed preview or unexpected confirmation can be reproduced and explained.</p></div></article><article><div><h3>Validate the hash as 64 hexadecimal characters before serializing.</h3><p>Record the evidence for this stage so a failed preview or unexpected confirmation can be reproduced and explained.</p></div></article><article><div><h3>Submit the payload through the agreed carrier and persist the raw message and transaction ID.</h3><p>Record the evidence for this stage so a failed preview or unexpected confirmation can be reproduced and explained.</p></div></article><article><div><h3>Verify the result with the same BLOCK-20 consumer that will display or settle it.</h3><p>Record the evidence for this stage so a failed preview or unexpected confirmation can be reproduced and explained.</p></div></article></div></div></section><section><div class="wrap"><div class="section-head"><div><div class="eyebrow">Release gate</div><h2>Before production traffic.</h2></div><p>Use these checks for automated tests, integration rehearsals, and final transaction review.</p></div><ul class="checklist"><li>p, op, and tick are present.</li><li>Numbers use strings and pass the consumer limits.</li><li>Block hash is exactly 64 hexadecimal characters when supplied.</li><li>The consumer version is recorded.</li><li>Raw payload and transaction ID are retained for replay and audit.</li></ul><div class="callout" style="margin-top:30px"><b>Operational caution</b>This repository specifies the Bitcoin Universe Inscribe profile. It does not claim to define a network-wide consensus standard outside compatible implementations.</div></div></section><section id="sources"><div class="wrap"><div class="section-head"><div><div class="eyebrow">Source trail</div><h2>Read the active implementation.</h2></div><p>These links are the starting point for release-aware rules and reference behavior. Check them again before production use.</p></div><div class="sources"><a class="source" href="https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20" target="_blank" rel="noreferrer"><span>Bitcoin Universe Inscribe BLOCK-20 builder</span><small>Open ↗</small></a></div></div></section></main><footer class="footer"><div class="wrap">Built by <a href="https://github.com/bitcoinuniverse">Bitcoin Universe</a>. Review live protocol implementations before signing a transaction.</div></footer><script>for(const b of document.querySelectorAll('[data-copy]'))b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);const t=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=t,1200)}catch{b.textContent='Select text'}})</script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Integration and operational guide for Bitcoin Universe Inscribe BLOCK-20.">
+    <meta name="theme-color" content="#0b1020">
+    <title>BLOCK-20 integration guide | Bitcoin Universe</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="nav-wrap">
+        <a class="brand" href="index.html" aria-label="BLOCK-20 documentation home"><span class="brand-mark">B20</span><span>BLOCK-20 docs</span></a>
+        <nav aria-label="Primary navigation">
+          <a href="index.html">Overview</a>
+          <a href="reference.html">Payload spec</a>
+          <a href="api.html">API</a>
+          <a href="lifecycle.html">Lifecycle</a>
+          <a href="guide.html" aria-current="page">Integration</a>
+          <a href="conformance.html">Conformance</a>
+        </nav>
+        <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20" target="_blank" rel="noreferrer">Implementation source</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="wrap hero compact">
+        <div>
+          <p class="eyebrow">Integration guide</p>
+          <h1>Build a safe product flow around the actual order model.</h1>
+          <p class="lead">Use this guide when your app creates BLOCK-20 orders through Bitcoin Universe Inscribe. It focuses on destination safety, user confirmation, lifecycle observation, and evidence needed for support.</p>
+        </div>
+        <aside class="hero-panel">
+          <dl>
+            <div><dt>Prerequisite</dt><dd>A compatible wallet or manual Bitcoin payment path, funded on the intended network.</dd></div>
+            <div><dt>Required client record</dt><dd>Order ID, receiver address, payment details, payload, and transactions.</dd></div>
+            <div><dt>Final verification</dt><dd>On-chain reveal plus a compatible reader or indexer result.</dd></div>
+          </dl>
+        </aside>
+      </div>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Product flow</p><h2>Seven steps from intent to verification.</h2></div>
+            <p>Do not condense these stages into a generic "send" button. BLOCK-20 order creation, payment, reveal, and indexer interpretation are separate events with different failure modes.</p>
+          </div>
+          <div class="flow">
+            <article><h3>Choose the reader and network first</h3><p>Decide which compatible indexer or reader will evaluate the payload, and ensure the connected wallet, receiver address, server configuration, and payment path use the same Bitcoin network.</p></article>
+            <article><h3>Collect and validate intent locally</h3><p>Validate ticker, amount, supply, and mint limit according to your product and reader requirements. The server does not enforce many of these semantic constraints.</p></article>
+            <article><h3>Require an explicit receiver address</h3><p>Collect a valid user-controlled receiver address for every normal order. Display it on the review screen, and store it before calling the API.</p></article>
+            <article><h3>Create one order and freeze its details</h3><p>Call <code>POST /block20/order</code>. Use the returned <code>inscriptionJson</code>, <code>commitAddress</code>, <code>commitAmount</code>, network, and expiry as the immutable payment instruction for that order.</p></article>
+            <article><h3>Obtain one intentional payment</h3><p>Ask the wallet to fund the returned address. Prevent duplicate submissions and do not reuse a commit address for unrelated funds.</p></article>
+            <article><h3>Poll order status and surface uncertainty</h3><p>Poll the public order endpoint. Show the distinctions between awaiting payment, reveal retry, terminal error, and a reveal transaction ID. Never equate an HTTP 201 with a confirmed reveal.</p></article>
+            <article><h3>Verify in the intended reader</h3><p>After <code>revealTxid</code> exists, confirm the inscription bytes and ask the selected reader or indexer for the intended result. Keep every identifier needed to reproduce the outcome.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Strong client validation</p><h2>Apply the rules your product actually needs.</h2></div>
+            <p>The server is deliberately permissive in several areas. A production client should validate user intent before creating a payment instruction, while still treating the server's returned payload as the record to display and retain.</p>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3>Recommended before order creation</h3>
+              <ul class="note-list">
+                <li>Normalize and validate the ticker with the target reader's documented rules.</li>
+                <li>Require a positive integer amount if that is your reader's requirement. The current API does not do so.</li>
+                <li>Require explicit numeric <code>maxSupply</code> and <code>limitMint</code> for deploys. Do not rely on public endpoint defaults.</li>
+                <li>Reject a receiver address that does not belong to the intended network.</li>
+                <li>Display fee rate, commit amount, and expiry with units before a wallet opens.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Do not send as client input</h3>
+              <ul class="note-list">
+                <li><code>p</code>. The writer inserts literal <code>block-20</code>.</li>
+                <li><code>hash</code> for a normal mint. The server fetches and inserts its current tip hash.</li>
+                <li>Assumptions that <code>repeatCount</code> creates multiple direct BLOCK-20 inscriptions.</li>
+                <li>Secrets or private keys. The server-owned commit key is internal infrastructure, not a client API field.</li>
+                <li>An arbitrary commit outpoint unless you understand the advanced reveal path and its safety limits.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Create and confirm</p><h2>Use the returned order as the payment contract.</h2></div>
+            <p>This request is illustrative. The dynamic order values are returned by the server. Replace the host and optional path prefix for your deployment.</p>
+          </div>
+          <article class="code-card">
+            <header><strong>Create a mint order</strong><span>cURL example</span></header>
+            <pre><code>curl --request POST "$INSCRIBE_API/block20/order" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "action": "mint",
+    "tick": "BLK",
+    "amount": 1000,
+    "feeRate": 5,
+    "receiverAddress": "&lt;user-controlled Bitcoin address&gt;"
+  }'</code></pre>
+          </article>
+          <div class="grid two" style="margin-top:18px">
+            <article class="card">
+              <h3>Review screen requirements</h3>
+              <p>Show the action, ticker, exact <code>inscriptionJson</code>, selected network, receiver address, commit address, commit amount in sats and BTC, service state, and expiry. Include a plain-language warning that the server performs the reveal.</p>
+            </article>
+            <article class="card">
+              <h3>Payment controls</h3>
+              <p>Disable a second payment attempt after the first submission is accepted. For manual payment, clearly mark the order ID, address, amount, and network as a single-use instruction and keep the transaction ID when known.</p>
+            </article>
+          </div>
+          <div class="callout danger" style="margin-top:16px">
+            <strong>Never silently omit the receiver.</strong>
+            If a normal client does not send a receiver, the reveal output falls back to the backend-controlled commit address. Treat an empty receiver as a blocking validation error in the client, even though the current API does not reject it.
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Mint and repeat behavior</p><h2>Make automatic values visible.</h2></div>
+            <p>Current frontend behavior and direct API behavior diverge for repeated mints. State this explicitly in any product UI so the user sees the actual route used.</p>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3>Normal mint</h3>
+              <p>The server obtains the current tip hash and emits it as <code>hash</code>. A UI can preview that mint hashes are automatic, but it must show the final server-returned <code>inscriptionJson</code> as the authoritative result.</p>
+              <p class="small">The current server does not locally validate the hash shape. Your integration should not manufacture a hash field for this API path.</p>
+            </article>
+            <article class="card">
+              <h3>Repeated mints</h3>
+              <p>Direct <code>repeatCount</code> increases calculated funding but does not create multiple payloads or multiple monitor reveals. The current frontend uses a separate generic bulk endpoint for normal multi-mint UI.</p>
+              <p class="small">Do not expose direct order <code>repeatCount</code> as a quantity control unless you intentionally support its current operational behavior.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Handling failures</p><h2>Give users an accurate recovery path.</h2></div>
+            <p>Some failures should be retried automatically, some require a corrected request, and some require support with the original order evidence. The public order state intentionally does not reveal every backend diagnostic.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Observed condition</th><th>Product response</th></tr></thead>
+              <tbody>
+                <tr><td>Token list unavailable</td><td>Offer retry and show that token discovery depends on external indexers. Do not construct a mint from stale or unknown token information without clear user confirmation.</td></tr>
+                <tr><td>Latest-block lookup fails</td><td>Do not create a normal mint order. The server cannot generate its required current-hash payload.</td></tr>
+                <tr><td>Order creation validation error</td><td>Keep the user's draft, correct the invalid field, and create a new order. Do not ask for payment without a returned order ID and payment instruction.</td></tr>
+                <tr><td>Payment not detected</td><td>Confirm address, network, output value, and transaction status. Retain the payment transaction ID. Do not send a second payment by default.</td></tr>
+                <tr><td><code>reveal_failed</code></td><td>Explain that the service may retry automatically. Preserve order ID and request ID. Avoid advising the user to spend or move the commit output.</td></tr>
+                <tr><td><code>reveal_error</code> or missing result</td><td>Escalate with order ID, receiver, commit details, payload, and transaction IDs. The public order response omits internal error detail and retry count.</td></tr>
+                <tr><td>Reveal transaction exists but reader does not show expected state</td><td>Inspect the exact inscription bytes and use the reader or indexer version chosen at the start of the flow. This is a compatibility question, not proof that the Bitcoin transaction was absent.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Operator notes</p><h2>Configuration and observability matter.</h2></div>
+            <p>Operators of the API own a server-assisted signing process. Document and monitor the external data sources, network configuration, database, and service controls alongside the API itself.</p>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3>Relevant configuration</h3>
+              <p>Common backend inputs include <code>BLOCK20_API_URL</code>, optional comma-separated <code>BLOCK20_API_URLS</code>, network selection through <code>IS_TEST</code>, and mempool endpoints such as <code>MEMPOOL_API_URL</code> and its testnet equivalent.</p>
+              <p class="small">The plural indexer fallback variable is supported by source but is not currently listed in the sample environment file. Keep configuration documentation synchronized with deployment.</p>
+            </article>
+            <article class="card">
+              <h3>What to observe</h3>
+              <p>Monitor upstream indexer latency, tip lookup success, reveal broadcast failures, order-state counts, background worker liveness, request IDs, database durability, and access to the private signing material required for unresolved orders.</p>
+              <p class="small">Use health checks and a controlled release procedure before accepting production payments.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-intro">
+            <div><p class="eyebrow">Before release</p><h2>Minimum acceptance checklist.</h2></div>
+            <p>Test the payload, the payment lifecycle, and the final reader result together. A test that only checks JSON construction is not sufficient for a money-moving integration.</p>
+          </div>
+          <ul class="checklist">
+            <li>Request and display a valid receiver address for all normal orders.</li>
+            <li>Compare the returned <code>inscriptionJson</code> with the intended operation before payment.</li>
+            <li>Test order creation, payment detection, reveal success, reveal retry, expiry, and reader verification on the intended network.</li>
+            <li>Ensure the UI handles a 201 reveal response with <code>revealTxid: null</code> as a failure state, not success.</li>
+            <li>Save enough support evidence to reconstruct a result without relying on volatile indexer data.</li>
+          </ul>
+          <p class="small" style="margin-top:18px">Use <a href="conformance.html">conformance vectors</a> to seed automated tests, then add end-to-end tests against your configured wallet, backend, and reader.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><div class="wrap"><p>Integration guidance for the current Inscribe implementation. Confirm current behavior against <a href="api.html">the API reference</a> and <a href="reference.html">the emitted payload specification</a> before production release.</p></div></footer>
+  </body>
+</html>
