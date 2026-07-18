@@ -11,20 +11,24 @@ This repository documents a Bitcoin Universe application profile. It is not a ne
 - [API reference](api.html): order creation, order reads, reveal, tip lookup, token list, and error behavior.
 - [Lifecycle](lifecycle.html): commit funding, server-assisted reveal, status states, expiry, retry, custody, and receiver safety.
 - [Integration guide](guide.html): product workflow, client validation, payment UX, recovery, and operations.
+- [Mint-hash reference](mint-hash.html): precise block-ID source, timing, canonical syntax profile, verification, freshness, and reorganization boundaries.
 - [Conformance](conformance.html): source-driven fixtures and end-to-end test matrix.
 - [Prose specification](SPEC.md): durable implementation specification and change policy.
 - [Payload JSON Schema](schemas/block20-inscribe-payload.schema.json): shape validation for current emitted payloads.
+- [Mint-hash profile schema](schemas/block20-mint-hash.profile.schema.json): opt-in canonical syntax validation for parsed mint payloads.
 
 ## What this set corrects
 
 The earlier documentation described only generic payload shapes. The current set documents the actual application behavior:
 
 - The payload is compact UTF-8 JSON in an Ordinals inscription with content type `text/plain;charset=utf-8`.
-- REST request fields differ from on-chain payload fields. The server injects `p`, and normal mint orders inject a live block `hash`.
+- REST request fields differ from on-chain payload fields. The server injects `p`, and normal mint orders inject the Bitcoin tip block ID observed at order creation.
+- A mint hash is not a transaction, output, inscription, height, Merkle root, or the block that later confirms reveal. It is a backend-side tip snapshot that should be checked against the returned `blockHash` and final `inscriptionJson`.
 - The API creates a server-assisted commit and reveal order. A client does not construct the final reveal transaction at order creation time.
 - A valid, user-controlled `receiverAddress` is essential. An empty receiver falls back to the server-generated commit address at reveal.
 - The public writer currently permits zero and decimal amounts, and it does not validate ticker, max supply, or mint limit semantics. Those are compatibility concerns, not guarantees.
 - Direct `repeatCount` multiplies funding but does not create multiple direct BLOCK-20 inscription payloads or monitor reveals.
+- Payment detection requires one eligible UTXO. It does not aggregate smaller outputs, and the selected reveal input spends its full value.
 
 ## Source of truth
 
@@ -35,7 +39,7 @@ The documentation is grounded in these implementation locations:
 - [`backend/src/common/bitcoin-validation.ts`](https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/common/bitcoin-validation.ts)
 - [`frontend/src/components/block20`](https://github.com/bitcoinuniverse/inscribe/tree/main/frontend/src/components/block20)
 
-Always compare this documentation with the deployed source before sending funds. The returned `inscriptionJson` is the concrete record to display, save, and verify for a created order.
+Always compare this documentation with the deployed source before sending funds. The returned `inscriptionJson` is the concrete record to display, save, and verify for a created order. For mints, preserve the original request, the returned `blockHash`, the payload string, and the payment and reveal records together.
 
 ## Local preview
 

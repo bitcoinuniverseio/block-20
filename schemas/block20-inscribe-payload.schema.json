@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:bitcoinuniverse:block-20:inscribe-payload:v1",
   "title": "Bitcoin Universe Inscribe BLOCK-20 emitted payload",
-  "description": "Shape-only schema for compact JSON emitted by the current Bitcoin Universe Inscribe BLOCK-20 writer. It does not define token state, indexer acceptance, or arithmetic semantics.",
+  "description": "Shape-only schema for compact JSON emitted by the current Bitcoin Universe Inscribe BLOCK-20 writer. It does not define token state, indexer acceptance, arithmetic semantics, active-chain status, or mint-hash freshness. Use block20-mint-hash.profile.schema.json when a canonical mint-hash profile is required.",
   "oneOf": [
     {
       "title": "Deploy payload",
@@ -15,7 +15,16 @@
         "tick": { "type": "string", "minLength": 1 },
         "max": { "type": "string" },
         "lim": { "type": "string" },
-        "des": { "type": "string" }
+        "des": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" },
+            { "type": "object" },
+            { "type": "array" }
+          ],
+          "description": "The current endpoint may serialize a truthy JSON value. Canonical clients should use a string description."
+        }
       }
     },
     {
@@ -28,7 +37,10 @@
         "op": { "const": "mint" },
         "tick": { "type": "string", "minLength": 1 },
         "amt": { "type": "string" },
-        "hash": { "type": "string" }
+        "hash": {
+          "type": "string",
+          "description": "Backend-selected tip hash as emitted by the current writer. This shape schema intentionally does not assert canonical syntax or chain validity."
+        }
       }
     },
     {
