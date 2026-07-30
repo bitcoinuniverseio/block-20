@@ -23,4 +23,4 @@ BLOCK-20 brings deploy, mint, and transfer inscriptions into one clear Universe 
 
 Use a Bitcoin receiving address you control. Review the exact payload, receiver, commit address, required amount, expiry, and fee before paying. Send one dedicated output only once, and keep the order page open until the reveal appears. Never send a seed phrase or private key. Bitcoin payments and confirmed inscriptions are difficult to reverse.
 
-[Open BLOCK-20 in Universe Inscribe](https://inscribe.bitcoinuniverse.io/?tab=block20)
+[Open BLOCK-20 in Universe Inscribe](https://inscribe.bitcoinuniverse.io/block20)
