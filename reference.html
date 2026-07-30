@@ -1,202 +1,39 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="BLOCK-20 on-chain payload specification and exact Inscribe writer behavior.">
-    <meta name="theme-color" content="#120d09">
-    <title>BLOCK-20 payload specification | Bitcoin Universe</title>
-    <link rel="stylesheet" href="site.css">
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="nav-wrap">
-        <a class="brand" href="index.html" aria-label="BLOCK-20 documentation home"><span class="brand-mark">B20</span><span>BLOCK-20 docs</span></a>
-        <nav aria-label="Primary navigation">
-          <a href="index.html">Overview</a>
-          <a href="reference.html" aria-current="page">Payload spec</a>
-          <a href="api.html">API</a>
-          <a href="lifecycle.html">Lifecycle</a>
-          <a href="guide.html">Integration</a>
-          <a href="mint-hash.html">Mint hash</a>
-          <a href="conformance.html">Conformance</a>
-        </nav>
-        <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/block20/block20.service.ts" target="_blank" rel="noreferrer">Payload builder</a>
-      </div>
-    </header>
-
-    <main>
-      <div class="wrap hero compact">
-        <div>
-          <p class="eyebrow">Payload specification</p>
-          <h1>What the Inscribe writer actually inscribes.</h1>
-          <p class="lead">A precise description of the compact JSON emitted by the current Bitcoin Universe Inscribe BLOCK-20 writer, including the distinction between an API input and the on-chain object.</p>
-        </div>
-        <aside class="hero-panel">
-          <dl>
-            <div><dt>Encoding</dt><dd>Compact <code>JSON.stringify</code> output, encoded as UTF-8.</dd></div>
-            <div><dt>Envelope</dt><dd>Ordinals <code>ord</code> envelope, with content type <code>text/plain;charset=utf-8</code>.</dd></div>
-            <div><dt>Reader contract</dt><dd>Payload syntax alone does not determine balances, ordering, validity, or settlement.</dd></div>
-          </dl>
-        </aside>
-      </div>
-
-      <section>
-        <div class="wrap">
-          <div class="callout warn">
-            <strong>Implementation profile, not universal consensus.</strong>
-            This page specifies what the reviewed InScribe writer emits. It does not claim that every independent BLOCK-20 indexer accepts these messages, assigns the same state, or applies the same validation rules.
-          </div>
-          <div class="section-intro" style="margin-top:34px">
-            <div><p class="eyebrow">Wire format</p><h2>One JSON object, carried by an inscription.</h2></div>
-            <p>The REST body is a construction request. The on-chain content is the returned <code>inscriptionJson</code> field. Parse the resulting JSON object rather than expecting a client-supplied body to be preserved unchanged.</p>
-          </div>
-          <div class="grid two">
-            <article class="code-card">
-              <header><strong>Payload bytes</strong><span>Current writer</span></header>
-              <pre><code>UTF-8 encoded JSON.stringify(payload)</code></pre>
-            </article>
-            <article class="code-card">
-              <header><strong>Inscription content type</strong><span>Current writer</span></header>
-              <pre><code>text/plain;charset=utf-8</code></pre>
-            </article>
-          </div>
-          <p class="small" style="margin-top:14px">The standard inscription envelope includes <code>ord</code>; neither a protocol MIME type nor an OP_RETURN output is used by this writer.</p>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Operation shapes</p><h2>Emitted objects by operation.</h2></div>
-            <p>Examples show the fields and order produced by the current implementation. Object-key order should not be used as a reader rule. Placeholders show dynamic values, not literal emitted strings.</p>
-          </div>
-          <div class="grid three">
-            <article class="code-card">
-              <header><strong>Deploy</strong><span>Creates a ticker definition</span></header>
-              <pre><code>{
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="See the compact JSON carried by BLOCK-20 deploy, mint, and transfer inscriptions."><meta name="theme-color" content="#120d09"><title>What BLOCK-20 inscribes</title><link rel="stylesheet" href="site.css"></head><body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html" aria-label="BLOCK-20 home"><span class="brand-mark">B20</span><span>BLOCK-20</span></a><nav aria-label="Primary navigation"><a href="index.html">Overview</a><a href="guide.html">Start safely</a><a href="lifecycle.html">Your order</a><a href="reference.html" aria-current="page">The inscription</a><a href="mint-hash.html">Mint hash</a></nav><a class="source-link" href="https://inscribe.bitcoinuniverse.io/?tab=block20" target="_blank" rel="noreferrer">Open BLOCK-20</a></div></header>
+  <main>
+    <div class="wrap hero compact"><div><p class="eyebrow">The inscription</p><h1>Small payloads with a clear purpose.</h1><p class="lead">BLOCK-20 writes compact UTF-8 JSON inside a Bitcoin inscription. The operation tells a compatible reader whether the message defines a ticker, mints an amount, or prepares a transfer.</p></div><aside class="hero-panel"><dl><div><dt>Protocol marker</dt><dd><code>block-20</code></dd></div><div><dt>Actions</dt><dd>Deploy, mint, transfer</dd></div><div><dt>Carrier</dt><dd>Bitcoin inscription</dd></div></dl></aside></div>
+    <section><div class="wrap"><div class="callout warn"><strong>Reader choice matters.</strong> Bitcoin proves the inscription bytes and transaction history. A compatible BLOCK-20 reader interprets token validity, balances, ordering, and state. Check the reader you trust before relying on an outcome.</div><div class="section-intro" style="margin-top:34px"><div><p class="eyebrow">Three actions</p><h2>Read the preview before payment.</h2></div><p>The order page shows the exact compact payload. The examples below explain the fields without representing a real ticker or transaction.</p></div><div class="grid three">
+      <article class="code-card"><header><strong>Deploy</strong><span>Defines a ticker</span></header><pre><code>{
   "p": "block-20",
   "op": "deploy",
   "tick": "BLK",
   "max": "21000000",
   "lim": "1000",
   "des": "Optional description"
-}</code></pre>
-            </article>
-            <article class="code-card">
-              <header><strong>Mint</strong><span>Tip snapshot injected by the server</span></header>
-              <pre><code>{
+}</code></pre></article>
+      <article class="code-card"><header><strong>Mint</strong><span>Creates an amount</span></header><pre><code>{
   "p": "block-20",
   "op": "mint",
   "tick": "BLK",
   "amt": "1000",
-  "hash": "&lt;tip-hash-from-mempool&gt;"
-}</code></pre>
-            </article>
-            <article class="code-card">
-              <header><strong>Transfer</strong><span>Amount is a string in payload</span></header>
-              <pre><code>{
+  "hash": "&lt;bitcoin-block-hash&gt;"
+}</code></pre></article>
+      <article class="code-card"><header><strong>Transfer</strong><span>Prepares movement</span></header><pre><code>{
   "p": "block-20",
   "op": "transfer",
   "tick": "BLK",
   "amt": "250"
-}</code></pre>
-            </article>
-          </div>
-          <div class="callout danger" style="margin-top:16px">
-            <strong>Do not use the examples as a promise of external indexer acceptance.</strong>
-            In particular, the current order endpoint can emit <code>"amt":"0"</code> and accepts decimal amounts. A compatible reader may enforce stronger rules.
-          </div>
-          <div class="callout warn">
-            <strong>A mint hash records what the writer observed at order creation.</strong>
-            It is a Bitcoin block ID selected before funding or reveal, not the later reveal transaction or its confirmation block. The server trims the upstream response but does not revalidate its format, freshness, active-chain membership, or reorganization status. <a href="mint-hash.html">See the full mint-hash specification and verification procedure</a>.
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Field ledger</p><h2>Field meaning and current writer behavior.</h2></div>
-            <p>Required means required in the emitted operation shape. The second half of this page describes the separate REST-level checks, defaults, and omissions.</p>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Field</th><th>Operations</th><th>Emitted form</th><th>Meaning in this writer</th></tr></thead>
-              <tbody>
-                <tr><td><code>p</code></td><td>All</td><td>String, always <code>block-20</code></td><td>Injected by the server. API callers do not provide it.</td></tr>
-                <tr><td><code>op</code></td><td>All</td><td>String</td><td>Copied from API <code>action</code>. The writer recognizes exactly <code>deploy</code>, <code>mint</code>, and <code>transfer</code>.</td></tr>
-                <tr><td><code>tick</code></td><td>All</td><td>String</td><td>Copied from API input without normalization. The API requires a nonblank string, but does not apply a length, character, or case rule.</td></tr>
-                <tr><td><code>max</code></td><td>Deploy</td><td>String</td><td>Copied from <code>maxSupply</code> through string coercion, or defaults to <code>"21000000"</code> when omitted.</td></tr>
-                <tr><td><code>lim</code></td><td>Deploy</td><td>String</td><td>Copied from <code>limitMint</code> through string coercion. In the public order path, when omitted it uses normalized <code>amount</code>, which defaults to <code>"0"</code>.</td></tr>
-                <tr><td><code>des</code></td><td>Deploy</td><td>String, optional</td><td>Copied only when API <code>description</code> is truthy. The server does not validate its contents.</td></tr>
-                <tr><td><code>amt</code></td><td>Mint, transfer</td><td>String</td><td>Serialized from normalized API <code>amount</code>. The current endpoint permits finite values from 0 through JavaScript safe integer range, including decimals.</td></tr>
-                <tr><td><code>hash</code></td><td>Mint</td><td>String</td><td>Backend-observed Bitcoin tip block ID, selected during order creation and injected by the server. It is not a public order input. The writer trims it but does not locally verify canonical shape, active-chain membership, freshness, or reorganization status. <a href="mint-hash.html">Mint-hash reference</a>.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Input to output mapping</p><h2>The REST request is not the payload.</h2></div>
-            <p>These transformations are crucial for client-side previews and audit records. The order response is the authoritative record of the payload the server attempted to inscribe.</p>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Order request field</th><th>Writer action</th><th>Payload effect</th></tr></thead>
-              <tbody>
-                <tr><td><code>action</code></td><td>Required nonblank string, then matched exactly</td><td>Becomes <code>op</code>. Unknown values are rejected when the payload is built.</td></tr>
-                <tr><td><code>tick</code></td><td>Required nonblank string</td><td>Becomes <code>tick</code> exactly as supplied.</td></tr>
-                <tr><td><code>amount</code></td><td>Parsed as a finite number, default <code>0</code></td><td>Becomes <code>amt</code> for mint/transfer. For deploy with no <code>limitMint</code>, it becomes <code>lim</code>.</td></tr>
-                <tr><td><code>maxSupply</code></td><td>Not numeric-validated</td><td>Becomes <code>max</code>; omission produces <code>"21000000"</code>.</td></tr>
-                <tr><td><code>limitMint</code></td><td>Not numeric-validated</td><td>Becomes <code>lim</code>; omission falls back to normalized <code>amount</code>.</td></tr>
-                <tr><td><code>description</code></td><td>Not validated</td><td>Becomes <code>des</code> only if truthy.</td></tr>
-                <tr><td>Client-supplied <code>p</code> or <code>hash</code></td><td>Not part of the public order input</td><td><code>p</code> is fixed by the writer. A normal mint ignores any caller intent for <code>hash</code> and uses a fresh backend lookup, so clients must inspect the final returned payload.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Validation boundary</p><h2>What the current API checks, and what it does not.</h2></div>
-            <p>Keep this boundary visible in any UI. Stronger validation may be sensible for your product, but it is not currently an enforcement property of the documented server endpoint.</p>
-          </div>
-          <div class="grid two">
-            <article class="card">
-              <h3>Checked by the order endpoint</h3>
-              <ul class="note-list">
-                <li>The body must be a JSON object.</li>
-                <li><code>action</code> and <code>tick</code> must be nonblank strings.</li>
-                <li><code>action</code> must ultimately resolve to one of the three supported operations.</li>
-                <li><code>feeRate</code> is a finite number or numeric string from 1 to 10,000, default 5.</li>
-                <li><code>amount</code> is finite and between 0 and <code>Number.MAX_SAFE_INTEGER</code>, default 0.</li>
-                <li><code>repeatCount</code> is from 1 to 100 and is floored, default 1.</li>
-                <li><code>outputValue</code> below 330 sats becomes 0; values at or above 330 are floored.</li>
-              </ul>
-            </article>
-            <article class="card">
-              <h3>Not enforced by the order endpoint</h3>
-              <ul class="note-list">
-                <li>Ticker format, case, maximum length, or uniqueness.</li>
-                <li>Integer-only or positive-only amount semantics.</li>
-                <li>Numeric formatting or supply relationships for <code>maxSupply</code> and <code>limitMint</code>.</li>
-                <li>Description size or contents.</li>
-                <li>A valid user-controlled receiver address at order creation time.</li>
-                <li>A canonical 64-character hexadecimal shape, chain membership, freshness window, or reorganization status for the upstream mint hash before it is emitted.</li>
-              </ul>
-            </article>
-          </div>
-          <p class="small" style="margin-top:18px">For implementation-ready examples, including current zero and decimal behavior, see <a href="conformance.html">conformance vectors</a>.</p>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer"><div class="wrap"><p>Source-driven payload reference. Before production, confirm both the deployed writer and the compatible reader or indexer version.</p></div></footer>
-  </body>
-</html>
+}</code></pre></article>
+    </div></div></section>
+    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Field guide</p><h2>What each short name means.</h2></div><p>Compact names keep the inscription small. Their values remain readable in your order preview.</p></div><div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th><th>Where it appears</th></tr></thead><tbody>
+      <tr><td><code>p</code></td><td>The BLOCK-20 protocol marker.</td><td>Every action</td></tr>
+      <tr><td><code>op</code></td><td>The action: deploy, mint, or transfer.</td><td>Every action</td></tr>
+      <tr><td><code>tick</code></td><td>The ticker exactly as shown in the order.</td><td>Every action</td></tr>
+      <tr><td><code>max</code></td><td>The intended maximum supply.</td><td>Deploy</td></tr>
+      <tr><td><code>lim</code></td><td>The intended amount allowed per mint.</td><td>Deploy</td></tr>
+      <tr><td><code>des</code></td><td>An optional public description.</td><td>Deploy</td></tr>
+      <tr><td><code>amt</code></td><td>The amount represented as text.</td><td>Mint and transfer</td></tr>
+      <tr><td><code>hash</code></td><td>The Bitcoin block reference captured when a mint order is created.</td><td>Mint</td></tr>
+    </tbody></table></div><div class="callout danger" style="margin-top:16px"><strong>Exact values matter.</strong> Ticker spelling, capitalization, amounts, supply, limits, descriptions, and the mint hash become part of the inscription. If anything is wrong before payment, discard the order and create a fresh one.</div></div></section>
+  </main><footer class="site-footer"><div class="wrap"><p>For the story behind a mint's block reference, continue to <a href="mint-hash.html">the mint hash</a>.</p></div></footer>
+</body></html>

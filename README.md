@@ -1,59 +1,26 @@
-# BLOCK-20 documentation
+# BLOCK-20
 
-Implementation-accurate documentation for the BLOCK-20 writer and order flow in [Bitcoin Universe Inscribe](https://github.com/bitcoinuniverse/inscribe).
+**Create Bitcoin token actions with every important detail visible before you pay.**
 
-This repository documents a Bitcoin Universe application profile. It is not a network-wide consensus specification and it does not guarantee compatibility with every independent BLOCK-20 reader or indexer.
+BLOCK-20 brings deploy, mint, and transfer inscriptions into one clear Universe Inscribe journey. Choose an action, review the exact inscription and payment details, fund one dedicated Bitcoin output, and follow the reveal on-chain.
 
-## Start here
+## What you can do
 
-- [Overview](index.html): scope, architecture, and the facts that affect every integration.
-- [Payload specification](reference.html): emitted JSON, carrier, field mapping, defaults, and validation boundary.
-- [API reference](api.html): order creation, order reads, reveal, tip lookup, token list, and error behavior.
-- [Lifecycle](lifecycle.html): commit funding, server-assisted reveal, status states, expiry, retry, custody, and receiver safety.
-- [Integration guide](guide.html): product workflow, client validation, payment UX, recovery, and operations.
-- [Mint-hash reference](mint-hash.html): precise block-ID source, timing, canonical syntax profile, verification, freshness, and reorganization boundaries.
-- [Conformance](conformance.html): source-driven fixtures and end-to-end test matrix.
-- [Prose specification](SPEC.md): durable implementation specification and change policy.
-- [Payload JSON Schema](schemas/block20-inscribe-payload.schema.json): shape validation for current emitted payloads.
-- [Mint-hash profile schema](schemas/block20-mint-hash.profile.schema.json): opt-in canonical syntax validation for parsed mint payloads.
+- **Deploy:** define a new ticker, supply, mint limit, and optional description.
+- **Mint:** create a mint inscription with a Bitcoin block reference captured for the order.
+- **Transfer:** prepare a transfer inscription for a ticker and amount.
+- **Verify:** follow the reveal transaction and inspect the result with a compatible BLOCK-20 reader.
 
-## What this set corrects
+## Explore
 
-The earlier documentation described only generic payload shapes. The current set documents the actual application behavior:
+- [Meet BLOCK-20](index.html)
+- [Start safely](guide.html)
+- [Follow your order](lifecycle.html)
+- [See what gets inscribed](reference.html)
+- [Understand the mint hash](mint-hash.html)
 
-- The payload is compact UTF-8 JSON in an Ordinals inscription with content type `text/plain;charset=utf-8`.
-- REST request fields differ from on-chain payload fields. The server injects `p`, and normal mint orders inject the Bitcoin tip block ID observed at order creation.
-- A mint hash is not a transaction, output, inscription, height, Merkle root, or the block that later confirms reveal. It is a backend-side tip snapshot that should be checked against the returned `blockHash` and final `inscriptionJson`.
-- The API creates a server-assisted commit and reveal order. A client does not construct the final reveal transaction at order creation time.
-- A valid, user-controlled `receiverAddress` is essential. An empty receiver falls back to the server-generated commit address at reveal.
-- The public writer currently permits zero and decimal amounts, and it does not validate ticker, max supply, or mint limit semantics. Those are compatibility concerns, not guarantees.
-- Direct `repeatCount` multiplies funding but does not create multiple direct BLOCK-20 inscription payloads or monitor reveals.
-- Payment detection requires one eligible UTXO. It does not aggregate smaller outputs, and the selected reveal input spends its full value.
+## Protect every action
 
-## Source of truth
+Use a Bitcoin receiving address you control. Review the exact payload, receiver, commit address, required amount, expiry, and fee before paying. Send one dedicated output only once, and keep the order page open until the reveal appears. Never send a seed phrase or private key. Bitcoin payments and confirmed inscriptions are difficult to reverse.
 
-The documentation is grounded in these implementation locations:
-
-- [`backend/src/block20`](https://github.com/bitcoinuniverse/inscribe/tree/main/backend/src/block20)
-- [`backend/src/inscribe/bitcoin.utils.ts`](https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/inscribe/bitcoin.utils.ts)
-- [`backend/src/common/bitcoin-validation.ts`](https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/common/bitcoin-validation.ts)
-- [`frontend/src/components/block20`](https://github.com/bitcoinuniverse/inscribe/tree/main/frontend/src/components/block20)
-
-Always compare this documentation with the deployed source before sending funds. The returned `inscriptionJson` is the concrete record to display, save, and verify for a created order. For mints, preserve the original request, the returned `blockHash`, the payload string, and the payment and reveal records together.
-
-## Local preview
-
-This is a static documentation site with no build step. Serve the repository with any local static HTTP server, then open `index.html`. Check every navigation link at both desktop and narrow mobile widths.
-
-## Documentation maintenance
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing behavior claims. If a source change affects payload serialization, validation, transaction construction, lifecycle, or compatibility, update:
-
-1. `SPEC.md`.
-2. The relevant HTML page and `llms.txt`.
-3. The payload schema and conformance fixtures when applicable.
-4. `CHANGELOG.md` with the compatibility impact.
-
-## License
-
-See [LICENSE](LICENSE).
+[Open BLOCK-20 in Universe Inscribe](https://inscribe.bitcoinuniverse.io/?tab=block20)
