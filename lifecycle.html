@@ -1,159 +1,22 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Commit, payment, reveal, expiry, and retry behavior for Bitcoin Universe Inscribe BLOCK-20 orders.">
-    <meta name="theme-color" content="#120d09">
-    <title>BLOCK-20 order lifecycle | Bitcoin Universe</title>
-    <link rel="stylesheet" href="site.css">
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="nav-wrap">
-        <a class="brand" href="index.html" aria-label="BLOCK-20 documentation home"><span class="brand-mark">B20</span><span>BLOCK-20 docs</span></a>
-        <nav aria-label="Primary navigation">
-          <a href="index.html">Overview</a>
-          <a href="reference.html">Payload spec</a>
-          <a href="api.html">API</a>
-          <a href="lifecycle.html" aria-current="page">Lifecycle</a>
-          <a href="guide.html">Integration</a>
-          <a href="mint-hash.html">Mint hash</a>
-          <a href="conformance.html">Conformance</a>
-        </nav>
-        <a class="source-link" href="https://github.com/bitcoinuniverse/inscribe/blob/main/backend/src/block20/block20-monitor.service.ts" target="_blank" rel="noreferrer">Monitor source</a>
-      </div>
-    </header>
-
-    <main>
-      <div class="wrap hero compact">
-        <div>
-          <p class="eyebrow">Order lifecycle</p>
-          <h1>Commit first, then a service-controlled reveal.</h1>
-          <p class="lead">The BLOCK-20 order API creates server-held signing material and a funding address. Funding that address allows the service to reveal an Ordinals inscription to the selected receiver.</p>
-        </div>
-        <aside class="hero-panel">
-          <dl>
-            <div><dt>Payment window</dt><dd>Initial expiry is one hour after order creation.</dd></div>
-            <div><dt>Monitor cadence</dt><dd>Current process-local monitor runs every 10 seconds and evaluates the oldest 20 relevant orders.</dd></div>
-            <div><dt>Funding threshold</dt><dd>An eligible output is at least the returned <code>commitAmount</code>, with a 330-sat floor.</dd></div>
-          </dl>
-        </aside>
-      </div>
-
-      <section>
-        <div class="wrap">
-          <div class="callout danger">
-            <strong>This is a custody boundary.</strong>
-            The service generates and persists a private WIF and inscription script for each order, then uses that key to sign the reveal. The public order response does not expose the secret. Operators must treat the order database and reveal process as sensitive infrastructure.
-          </div>
-          <div class="section-intro" style="margin-top:34px">
-            <div><p class="eyebrow">Primary path</p><h2>The funding and reveal sequence.</h2></div>
-            <p>Show these steps in any integration. A successful order creation only provides an instruction to fund a commit address. It is not an on-chain inscription or an indexer-confirmed token result.</p>
-          </div>
-          <div class="flow">
-            <article><h3>Create the order</h3><p>The API serializes the payload, generates a commit address, calculates <code>commitAmount</code>, and stores the key material needed for reveal. Its public response begins at <code>awaiting_payment</code>.</p></article>
-            <article><h3>Freeze and display payment details</h3><p>Persist the order ID, receiver address, network, mint <code>blockHash</code> when present, commit address, commit amount, expiry, and exact <code>inscriptionJson</code>. Present only the returned payment details for this order.</p></article>
-            <article><h3>Fund one dedicated commit output</h3><p>Send one intentional output at or above <code>commitAmount</code> to <code>commitAddress</code>. The service does not aggregate smaller outputs, and it can choose the largest eligible UTXO at that address, so do not send unrelated funds there.</p></article>
-            <article><h3>Monitor detects a UTXO</h3><p>The monitor looks up UTXOs at the commit address. It accepts unconfirmed outputs, prefers confirmed outputs when available, chooses the largest eligible value, and supplies that selected outpoint to the reveal builder.</p></article>
-            <article><h3>Service signs and broadcasts reveal</h3><p>The server spends the commit output, embeds the inscription in the taproot script path, sends the inscription output to the receiver, and includes the configured service fee output.</p></article>
-            <article><h3>Verify the reveal and reader state</h3><p>Record <code>revealTxid</code>, inspect the on-chain inscription bytes, then query the compatible reader or indexer that determines the final protocol state.</p></article>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Cost and destination</p><h2>Make the payment and receiver explicit.</h2></div>
-            <p>Most user harm in this flow comes from mixing a generic Bitcoin payment mental model with a service-controlled commit output. Make amount, destination, and custody visible before the user pays.</p>
-          </div>
-          <div class="grid two">
-            <article class="card">
-              <h3>What <code>commitAmount</code> covers</h3>
-              <p>It is calculated from estimated reveal fee, the resulting inscription output value, and the current 1,500-sat service fee. It is a minimum required funding amount, not a generic wallet send amount.</p>
-              <p class="small">If a larger UTXO is selected, the reveal builder uses its actual value and sends the residual output after fees to the reveal receiver.</p>
-            </article>
-            <article class="card">
-              <h3>What the receiver controls</h3>
-              <p>A nonempty valid <code>receiverAddress</code> determines the intended inscription output and its network when the order is constructed. Include it in every normal client request and store it locally.</p>
-              <p class="small">The public order response does not contain <code>receiverAddress</code>, so an application cannot reconstruct this intent from a later order read alone.</p>
-            </article>
-          </div>
-          <div class="callout danger" style="margin-top:16px">
-            <strong>Empty receiver fallback is not a safe default.</strong>
-            When <code>receiverAddress</code> is absent or empty, reveal uses the server-generated <code>commitAddress</code> as the output receiver. The associated signing key is held by the backend. A nonempty malformed address can instead make reveal fail when its output is built.
-          </div>
-          <div class="callout warn">
-            <strong>Do not split or casually overfund the payment.</strong>
-            Multiple smaller outputs are not added together to satisfy <code>commitAmount</code>. If a larger output is selected, its full value becomes the reveal input and the residual after fees is routed to the receiver. Keep the commit address single-purpose and record the payment transaction ID and vout.
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Order states</p><h2>Statuses tell you where the order is, not every diagnostic detail.</h2></div>
-            <p>Poll <code>GET /block20/order/:orderId</code> after payment. The public serializer intentionally omits the private key, detailed broadcast error, and retry count.</p>
-          </div>
-          <div class="status-grid">
-            <article class="status-card"><p class="kicker">Awaiting payment</p><p>The order was created and no eligible commit UTXO has been used for reveal.</p></article>
-            <article class="status-card"><p class="kicker">Revealed</p><p>Broadcast produced a reveal transaction ID, exposed as <code>revealTxid</code>.</p></article>
-            <article class="status-card"><p class="kicker">Reveal failed</p><p>Signing or broadcast failed. The monitor can retry this state while retry budget remains.</p></article>
-            <article class="status-card"><p class="kicker">Reveal error</p><p>Retry budget was exhausted. Public order reads do not expose retry detail or the internal error text.</p></article>
-            <article class="status-card"><p class="kicker">Expired</p><p>The monitor found no qualifying payment after the configured one-hour window.</p></article>
-          </div>
-          <div class="grid two" style="margin-top:18px">
-            <article class="card">
-              <h3>Expiry is a monitor behavior</h3>
-              <p>The monitor marks an overdue <code>awaiting_payment</code> order as <code>expired</code> only when it cannot find a qualifying UTXO. If a qualifying UTXO is already present after the time window, the monitor can still reveal it.</p>
-              <p class="small">The explicit reveal API does not enforce <code>expiresAt</code> as a hard gate.</p>
-            </article>
-            <article class="card">
-              <h3>Failure recovery</h3>
-              <p>The monitor retries <code>reveal_failed</code> orders up to five times. A manual reveal attempt can be used by an advanced integrator with the correct outpoint, but it should not replace normal order monitoring.</p>
-              <p class="small">See <a href="api.html">the API reference</a> for reveal input validation and response behavior.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Repeat-count caveat</p><h2>Do not promise batch minting from a direct BLOCK-20 order.</h2></div>
-            <p><code>repeatCount</code> is an operational input, not a field in the inscribed JSON. It has a behavior that needs explicit product handling.</p>
-          </div>
-          <div class="callout warn">
-            <strong>Current direct-order behavior.</strong>
-            In <code>POST /block20/order</code>, <code>repeatCount</code> multiplies the calculated funding amount, but the stored order contains one inscription payload and the monitor invokes one reveal attempt. Do not document it as multiple inscriptions or repeated mints without an implementation change.
-          </div>
-          <div class="callout ok">
-            <strong>Current application behavior for multi-mint UI.</strong>
-            The existing frontend routes normal mint quantities above one through a separate generic bulk flow with duplicated text payloads. That is a different integration surface from direct BLOCK-20 order <code>repeatCount</code>.
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="section-intro">
-            <div><p class="eyebrow">Operator checklist</p><h2>Run the lifecycle as a service, not a fire-and-forget endpoint.</h2></div>
-            <p>Successful reveal depends on database availability, signing material, the configured mempool source, broadcast access, and the background monitor process.</p>
-          </div>
-          <ul class="checklist">
-            <li>Keep the database containing generated WIFs and inscription scripts protected, backed up, and available until orders are resolved.</li>
-            <li>Monitor the order process, mempool reachability, reveal broadcasts, and the count of <code>reveal_failed</code> and <code>reveal_error</code> orders.</li>
-            <li>Run one active monitor or coordinate workers with a distributed lock. The current monitor lock is in-process only.</li>
-            <li>Use a correctly configured Bitcoin network and verify receiver address network before creating an order.</li>
-            <li>Record payment instructions before opening a wallet confirmation and do not encourage a second payment after submission.</li>
-            <li>Use the target reader or indexer to verify semantic outcome after the on-chain reveal, not merely the HTTP status.</li>
-          </ul>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer"><div class="wrap"><p>For request fields and reveal API details, continue to <a href="api.html">the API reference</a>. For payload compatibility, read <a href="reference.html">the payload specification</a>.</p></div></footer>
-  </body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Understand every stage of a BLOCK-20 inscription order, from review to on-chain reveal."><meta name="theme-color" content="#120d09"><title>Your BLOCK-20 order journey</title><link rel="stylesheet" href="site.css"></head><body>
+  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html" aria-label="BLOCK-20 home"><span class="brand-mark">B20</span><span>BLOCK-20</span></a><nav aria-label="Primary navigation"><a href="index.html">Overview</a><a href="guide.html">Start safely</a><a href="lifecycle.html" aria-current="page">Your order</a><a href="reference.html">The inscription</a><a href="mint-hash.html">Mint hash</a></nav><a class="source-link" href="https://inscribe.bitcoinuniverse.io/?tab=block20" target="_blank" rel="noreferrer">Open BLOCK-20</a></div></header>
+  <main>
+    <div class="wrap hero compact"><div><p class="eyebrow">Your order journey</p><h1>One payment. One reveal. A result you can follow.</h1><p class="lead">A BLOCK-20 order prepares a commit address and waits for its dedicated Bitcoin payment. Once detected, Universe Inscribe completes the reveal to your chosen receiver.</p></div><aside class="hero-panel"><dl><div><dt>Before payment</dt><dd>Review the exact order and expiry.</dd></div><div><dt>After payment</dt><dd>Wait for detection and reveal.</dd></div><div><dt>After reveal</dt><dd>Verify the transaction and inscription.</dd></div></dl></aside></div>
+    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">The full path</p><h2>Know what each stage means.</h2></div><p>Creating an order does not put an inscription on-chain. The Bitcoin payment begins the commit-and-reveal sequence.</p></div><div class="flow">
+      <article><h3>1. Order created</h3><p>The action is turned into an exact inscription payload. A unique commit address, minimum amount, receiver, and payment window are shown.</p></article>
+      <article><h3>2. Details reviewed</h3><p>You compare the payload and destination with your intent and save the order information.</p></article>
+      <article><h3>3. Commit funded</h3><p>You send one dedicated Bitcoin output to the displayed address. Smaller outputs are not combined.</p></article>
+      <article><h3>4. Payment detected</h3><p>The order recognizes an eligible output at the commit address and begins the reveal.</p></article>
+      <article><h3>5. Inscription revealed</h3><p>The commit output is spent into the reveal transaction, which sends the inscription to the selected receiver.</p></article>
+      <article><h3>6. Result verified</h3><p>You inspect the reveal on Bitcoin and use a compatible reader to understand the BLOCK-20 state.</p></article>
+    </div></div></section>
+    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Order signals</p><h2>Read the status without guessing.</h2></div><p>Keep the order open after payment. Some stages need time to reach the next Bitcoin transaction.</p></div><div class="status-grid">
+      <article class="status-card"><p class="kicker">Awaiting payment</p><p>No eligible commit payment has been used. Confirm your wallet transaction and wait for detection.</p></article>
+      <article class="status-card"><p class="kicker">Revealed</p><p>A reveal transaction is available. Open it and compare the inscription with your preview.</p></article>
+      <article class="status-card"><p class="kicker">Reveal retrying</p><p>The reveal did not complete on its first attempt. Keep the order record and do not pay again.</p></article>
+      <article class="status-card"><p class="kicker">Needs help</p><p>The order could not complete automatically. Preserve the order and payment details for support.</p></article>
+      <article class="status-card"><p class="kicker">Expired</p><p>The displayed payment window passed without an eligible payment being detected.</p></article>
+    </div><div class="callout danger" style="margin-top:18px"><strong>Do not pay twice.</strong> A slow status update is not a new payment request. Check your wallet transaction and order details first. If the order needs help, preserve the evidence and contact the service you used.</div></div></section>
+    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Payment safety</p><h2>Keep the commit address single-purpose.</h2></div><p>Send one output at or above the displayed minimum. Do not split the amount, add unrelated funds, reuse an old commit address, or change the receiver after the order is created. If anything is wrong before payment, create a fresh order.</p></div><div class="grid two"><article class="card"><h3>Save before sending</h3><p>Keep the payload, receiver, order identity, commit address, minimum amount, expiry, and fee together.</p></article><article class="card"><h3>Save after sending</h3><p>Keep the wallet transaction ID, then add the reveal transaction ID when it appears.</p></article></div></div></section>
+  </main><footer class="site-footer"><div class="wrap"><p>Ready to create? Read the <a href="guide.html">safe start</a>. To decode the inscription, see <a href="reference.html">what gets written</a>.</p></div></footer>
+</body></html>
