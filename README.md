@@ -11,6 +11,10 @@ BLOCK-20 brings deploy, mint, and transfer inscriptions into one clear Universe 
 - **Transfer:** prepare a transfer inscription for a ticker and amount.
 - **Verify:** follow the reveal transaction and inspect the result with a compatible BLOCK-20 reader.
 
+The live Universe explorer is backed by a Universe-operated BLOCK-20 reader on
+the dedicated indexer server. The reader validates current Bitcoin history and
+keeps the migration of backend infrastructure transparent to users.
+
 ## Explore
 
 - [Meet BLOCK-20](index.html)
