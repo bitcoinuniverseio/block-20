@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 test vectors: valid and invalid cases with expected outcomes</title>
+<meta name="description" content="Test vectors for a BLOCK-20 reader: payload grammar, ticker and amount validation, every anchor boundary, supply exhaustion, transfer settlement, within-block ordering, and reorganization behavior.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/vectors.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 test vectors">
+<meta property="og:description" content="Valid and invalid BLOCK-20 cases with the exact expected reader outcome for each.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/vectors.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html">Specification</a>
+      <a href="guide.html">Guide</a>
+      <a href="reference.html">Reference</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="mint-hash.html">Mint anchor</a>
+      <a href="vectors.html" aria-current="page">Test vectors</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Conformance</p>
+    <h1>Test vectors</h1>
+    <p class="lead">Cases a conforming reader must reproduce exactly. Every expected outcome is the behavior of the <code>bitcoin-universe-block20-v1</code> profile, and every rejection cites the rule that causes it.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Setup</p>
+      <h2 id="fixture">Shared fixture</h2>
+      <p>Unless a vector says otherwise, all vectors share this state.</p>
+    </div>
+    <dl class="facts">
+      <div><dt>Network</dt><dd>Bitcoin mainnet</dd></div>
+      <div><dt>Ticker</dt><dd><code>BLK</code>, identity <code>blk</code></dd></div>
+      <div><dt>Deploy height (D)</dt><dd><code>767430</code></dd></div>
+      <div><dt>Maximum supply</dt><dd><code>21000000</code></dd></div>
+      <div><dt>Per-mint limit</dt><dd><code>1000</code></dd></div>
+      <div><dt>Anchor block used</dt><dd><span class="hash">000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5</span> at height <code>767430</code></dd></div>
+      <div><dt>Freshness window (W)</dt><dd><code>144</code> blocks</dd></div>
+      <div><dt>Finality depth</dt><dd><code>6</code> confirmations</dd></div>
+    </dl>
+    <p class="small muted">The anchor block above is a real Bitcoin mainnet block: it is the first height a BLOCK-20 reader scans on mainnet. Ticker, supply, and reveal heights are fixture values.</p>
+    <p>Anywhere a vector writes <code>&lt;HASH&gt;</code>, substitute that 64 character block ID. Run any mint vector through the <a href="mint-hash.html#verifier">anchor verifier</a> to see the derivation evaluated step by step.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Group G</p>
+      <h2 id="grammar">Payload grammar and field validation</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Grammar vectors. Outcome "ignored" means the inscription is not a BLOCK-20 error, it simply has no effect.</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">Inscription content</th><th scope="col">Expected outcome</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">G1</th><td><code>{"p":"block-20","op":"deploy","tick":"BLK","max":"21000000","lim":"1000"}</code></td><td><span class="tag ok">Accepted</span> ticker <code>blk</code> created, all supply figures zero</td><td>R5.1 to R5.6</td></tr>
+          <tr><th scope="row">G2</th><td><code>{"p":"block-20","op":"mint","tick":"BLK","amt":"1","amt":"2","hash":"&lt;HASH&gt;"}</code></td><td><span class="tag no">Rejected</span> repeated field</td><td>R3.4</td></tr>
+          <tr><th scope="row">G3</th><td><code>{"p":"block-20","op":"mint","tick":"BLK","amt":1000,"hash":"&lt;HASH&gt;"}</code></td><td><span class="tag no">Rejected</span> value is not a JSON string</td><td>R3.3</td></tr>
+          <tr><th scope="row">G4</th><td><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"250"} extra</code></td><td><span class="tag no">Rejected</span> trailing content</td><td>R3.2</td></tr>
+          <tr><th scope="row">G5</th><td><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":{"v":"250"}}</code></td><td><span class="tag no">Rejected</span> nested object</td><td>R3.3</td></tr>
+          <tr><th scope="row">G6</th><td><code>{"p":"block-20","op":"mint","tick":"BLK","amt":"1000","hash":"&lt;HASH&gt;","memo":"hi"}</code></td><td><span class="tag no">Rejected</span> unknown field on a mint</td><td>R3.8</td></tr>
+          <tr><th scope="row">G7</th><td><code>{"p":"block-20","op":"deploy","tick":"BLK","max":"21000000"}</code></td><td><span class="tag no">Rejected</span> missing required <code>lim</code></td><td>R3.8</td></tr>
+          <tr><th scope="row">G8</th><td><code>{"p":"block20","op":"mint","tick":"BLK","amt":"1","hash":"&lt;HASH&gt;"}</code></td><td><span class="tag">Ignored</span> not a BLOCK-20 message</td><td>R3.7</td></tr>
+          <tr><th scope="row">G9</th><td><code>{}</code></td><td><span class="tag">Ignored</span> parses, but has no <code>p</code></td><td>R3.7</td></tr>
+          <tr><th scope="row">G10</th><td><code>{"p":"block-20","op":"deploy","tick":"blk","max":"21000000","lim":"1000"}</code> after G1</td><td><span class="tag">Ignored</span> identity <code>blk</code> already deployed</td><td>R4.3</td></tr>
+          <tr><th scope="row">G11</th><td><code>{"p":"block-20","op":"deploy","tick":"BLOCK","max":"100","lim":"1"}</code></td><td><span class="tag ok">Accepted</span> five characters is the maximum, identity <code>block</code></td><td>R4.1</td></tr>
+          <tr><th scope="row">G12</th><td><code>{"p":"block-20","op":"deploy","tick":"BLOCK2","max":"100","lim":"1"}</code></td><td><span class="tag no">Rejected</span> six characters</td><td>R4.1</td></tr>
+          <tr><th scope="row">G13</th><td><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"0"}</code></td><td><span class="tag no">Rejected</span> zero is not a positive integer</td><td>R4.4</td></tr>
+          <tr><th scope="row">G14</th><td><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"0250"}</code></td><td><span class="tag no">Rejected</span> leading zero</td><td>R4.4</td></tr>
+          <tr><th scope="row">G15</th><td><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"2.5"}</code></td><td><span class="tag no">Rejected</span> decimal point, and BLOCK-20 has zero decimals</td><td>R4.4, R4.6</td></tr>
+          <tr><th scope="row">G16</th><td><code>{"p":"block-20","op":"deploy","tick":"OVR","max":"1000","lim":"1001"}</code></td><td><span class="tag no">Rejected</span> per-mint limit exceeds maximum supply</td><td>R5.3</td></tr>
+          <tr><th scope="row">G17</th><td>Deploy with a <code>des</code> of 257 bytes</td><td><span class="tag no">Rejected</span> description over 256 bytes</td><td>R5.4</td></tr>
+          <tr><th scope="row">G18</th><td>Any valid payload inscribed with content type <code>image/png</code></td><td><span class="tag">Ignored</span> content type not accepted</td><td>R2.2</td></tr>
+          <tr><th scope="row">G19</th><td>Any valid payload padded to 2049 bytes</td><td><span class="tag">Ignored</span> over the size ceiling, not even parsed</td><td>R2.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Group A</p>
+      <h2 id="anchor">Anchor boundaries</h2>
+      <p>All vectors use the mint payload <code>{"p":"block-20","op":"mint","tick":"BLK","amt":"1000","hash":"&lt;HASH&gt;"}</code> with D = 767430 and W = 144. Only the anchor height A and the reveal height R vary. These are the cases where implementations diverge, so test every one.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Anchor derivation vectors, including all four boundaries.</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">A</th><th scope="col">R</th><th scope="col">R - A</th><th scope="col">Expected outcome</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">A1</th><td>767430</td><td>767500</td><td>70</td><td><span class="tag ok">Valid</span> credits 1000. Boundary case A = D.</td><td>R6.6</td></tr>
+          <tr><th scope="row">A2</th><td>767429</td><td>767500</td><td>71</td><td><span class="tag no">Rejected</span> anchor is older than the deployment</td><td>R6.6</td></tr>
+          <tr><th scope="row">A3</th><td>767499</td><td>767500</td><td>1</td><td><span class="tag ok">Valid</span> credits 1000. Boundary case A = R - 1.</td><td>R6.7</td></tr>
+          <tr><th scope="row">A4</th><td>767500</td><td>767500</td><td>0</td><td><span class="tag no">Rejected</span> a mint cannot anchor to its own block</td><td>R6.7</td></tr>
+          <tr><th scope="row">A5</th><td>767501</td><td>767500</td><td>-1</td><td><span class="tag no">Rejected</span> anchor is after the reveal</td><td>R6.7</td></tr>
+          <tr><th scope="row">A6</th><td>767356</td><td>767500</td><td>144</td><td><span class="tag ok">Valid</span> credits 1000. Boundary case R - A = W.</td><td>R6.8</td></tr>
+          <tr><th scope="row">A7</th><td>767355</td><td>767500</td><td>145</td><td><span class="tag no">Rejected</span> one block outside the freshness window</td><td>R6.8</td></tr>
+          <tr><th scope="row">A8</th><td colspan="3">hash is uppercase hex</td><td><span class="tag no">Rejected</span> before any chain lookup</td><td>R6.4</td></tr>
+          <tr><th scope="row">A9</th><td colspan="3">hash has a <code>0x</code> prefix, or is 63 or 65 characters</td><td><span class="tag no">Rejected</span> syntax</td><td>R6.4</td></tr>
+          <tr><th scope="row">A10</th><td colspan="3">hash is a valid transaction ID, not a block ID</td><td><span class="tag no">Rejected</span> resolves to no block</td><td>R6.5</td></tr>
+          <tr><th scope="row">A11</th><td colspan="3">hash names a header the node knows, but that height now holds a different block</td><td><span class="tag no">Rejected</span> the anchor is on an orphaned branch</td><td>R6.5</td></tr>
+          <tr><th scope="row">A12</th><td colspan="3">hash names a block with zero confirmations</td><td><span class="tag no">Rejected</span> not on the active chain</td><td>R6.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn">
+      <p>A1, A3, A6, and A7 are the vectors that catch off-by-one errors. An implementation that uses <code>A &lt;= R</code> passes A4 incorrectly. One that uses <code>R - A &lt; W</code> fails A6 incorrectly. One that uses <code>A &gt; D</code> fails A1 incorrectly.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Group S</p>
+      <h2 id="supply">Limit and supply</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Per-mint limit and supply exhaustion vectors. Anchor is valid in every case.</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">amt</th><th scope="col">Minted before</th><th scope="col">Expected outcome</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">S1</th><td>1000</td><td>0</td><td><span class="tag ok">Valid</span> credits 1000. Equal to <code>lim</code> is allowed.</td><td>R6.3</td></tr>
+          <tr><th scope="row">S2</th><td>1001</td><td>0</td><td><span class="tag no">Rejected</span> above the per-mint limit. Not reduced to 1000.</td><td>R6.3</td></tr>
+          <tr><th scope="row">S3</th><td>1000</td><td>20999500</td><td><span class="tag ok">Valid</span> credits 500. Partial final mint: requested 1000, credited 500.</td><td>R6.10</td></tr>
+          <tr><th scope="row">S4</th><td>1000</td><td>21000000</td><td><span class="tag">Ignored</span> supply exhausted. No event is produced at all.</td><td>R6.9</td></tr>
+          <tr><th scope="row">S5</th><td>1</td><td>21000000</td><td><span class="tag">Ignored</span> same as S4, regardless of amount</td><td>R6.9</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>After S3 the ticker's minted supply is exactly <code>21000000</code>, total is <code>21000000</code>, and every later mint follows S4.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Group T</p>
+      <h2 id="transfer">Transfer and settlement</h2>
+      <p>Starting state for this group: address <code>ALICE</code> holds 1000 <code>BLK</code> with no reservations.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Transfer inscription and settlement vectors.</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">Action</th><th scope="col">Expected outcome</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">T1</th><td>ALICE reveals <code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"250"}</code></td><td><span class="tag ok">Accepted</span> reservation created. Balance stays 1000, available becomes 750. No supply change.</td><td>R7.5</td></tr>
+          <tr><th scope="row">T2</th><td>After T1, ALICE reveals a second transfer for 800</td><td><span class="tag">Ignored</span> available balance is 750, below 800. No reservation created.</td><td>R7.3</td></tr>
+          <tr><th scope="row">T3</th><td>After T1, ALICE reveals a second transfer for 750</td><td><span class="tag ok">Accepted</span> available becomes 0. Two independent reservations now exist.</td><td>R7.3</td></tr>
+          <tr><th scope="row">T4</th><td>After T1, the inscription moves to BOB</td><td><span class="tag ok">Settled</span> ALICE 750, BOB 250. Supply unchanged.</td><td>R7.7</td></tr>
+          <tr><th scope="row">T5</th><td>After T1, the inscription moves back to ALICE</td><td><span class="tag ok">Settled</span> ALICE 1000, reservation released, movement still recorded.</td><td>R7.7</td></tr>
+          <tr><th scope="row">T6</th><td>After T1, the inscription is spent in transaction fees</td><td><span class="tag ok">Settled</span> ALICE 1000, reservation released. No supply change.</td><td>R7.8</td></tr>
+          <tr><th scope="row">T7</th><td>After T1, the inscription is burnt or sent to a destination with no supported address</td><td><span class="tag ok">Settled</span> ALICE 750. Total and circulating fall by 250, burned rises by 250, minted unchanged.</td><td>R7.9</td></tr>
+          <tr><th scope="row">T8</th><td>After T4, BOB moves the same inscription to CAROL</td><td><span class="tag">No effect</span> the reservation is already settled.</td><td>R7.10</td></tr>
+          <tr><th scope="row">T9</th><td>A transfer inscription for a ticker that was never deployed</td><td><span class="tag">Ignored</span> no active deployment.</td><td>R7.2</td></tr>
+          <tr><th scope="row">T10</th><td>After T7, ALICE mints again while minted supply is still below max</td><td><span class="tag ok">Valid</span> burning did not free capacity, but it also did not consume any.</td><td>R7.9, R8.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Group O</p>
+      <h2 id="ordering">Within-block ordering</h2>
+    </div>
+    <p>Fixture change for this group: <code>ORD</code> is deployed with <code>max = 1500</code> and <code>lim = 1000</code>, and nothing has been minted.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Ordering vectors. Both mints have valid anchors and land in the same block.</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">Situation</th><th scope="col">Expected outcome</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">O1</th><td>Two mints of 1000 <code>ORD</code> in one block, at transaction index 3 and 7</td><td>Index 3 credits 1000. Index 7 credits 500 as a partial final mint. Minted supply reaches 1500.</td><td>R8.2, R8.3, R6.10</td></tr>
+          <tr><th scope="row">O2</th><td>Same block, both mints at transaction index 3, inscription numbers 100 and 101</td><td>Inscription 100 credits 1000, inscription 101 credits 500. Order is by ordinal, then inscription ID.</td><td>R8.2</td></tr>
+          <tr><th scope="row">O3</th><td>A transfer settlement and a new inscription share transaction index 5</td><td>The settlement is processed first, so the released or moved balance is visible to the new inscription in the same block.</td><td>R8.2</td></tr>
+          <tr><th scope="row">O4</th><td>A deploy of <code>NEW</code> and a mint of <code>NEW</code> in the same block, deploy ordered first</td><td>The deploy is accepted. The mint is accepted only if its anchor is an earlier block, since A must be below R and D equals R here.</td><td>R8.4, R6.7</td></tr>
+          <tr><th scope="row">O5</th><td>The same pair with the mint ordered first</td><td>The mint is ignored: no active deployment existed when it was processed.</td><td>R6.2, R8.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Group X</p>
+      <h2 id="reorg">Reorganization</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Reorganization vectors.</caption>
+        <thead><tr><th scope="col">ID</th><th scope="col">Situation</th><th scope="col">Expected outcome</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">X1</th><td>A block containing a mint, a transfer inscription, and a settlement is replaced</td><td>All three events are invalidated in descending order of height, transaction index, then event index. Their recorded deltas are reversed exactly. The settled reservation is restored and the created reservation is removed.</td><td>R10.2, R10.3</td></tr>
+          <tr><th scope="row">X2</th><td>The replacement branch contains the same mint inscription at a new height, and the anchor block is still on the active chain</td><td>The mint is re-evaluated against the new reveal height. If it still satisfies R6.6 through R6.8 it is credited again, otherwise it is not.</td><td>R10.7</td></tr>
+          <tr><th scope="row">X3</th><td>The reorganization orphans the anchor block itself</td><td>The mint is invalid on replay even though its bytes are unchanged, because the hash no longer resolves on the active chain.</td><td>R6.5, R10.7</td></tr>
+          <tr><th scope="row">X4</th><td>A deploy is invalidated while mints of that ticker are still applied</td><td>Fatal. The reader must not leave applied events attached to an inactive deployment, and must stop instead.</td><td>R10.4</td></tr>
+          <tr><th scope="row">X5</th><td>A reorganization would require invalidating an event at or below the finalized height</td><td>Fatal. The reader refuses and stops rather than produce a state it cannot justify.</td><td>R10.5</td></tr>
+          <tr><th scope="row">X6</th><td>A checkpoint arrives with a lower height, or the same height with a different hash, and no invalidations</td><td>Rejected as incomplete reorganization data if any applied event lies outside the new chain.</td><td>R10.1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <p>X4, X5, and X6 are the vectors that separate a careful reader from a lossy one. Each is a case where continuing would produce balances the reader could not derive from the chain, and the correct behavior is to stop.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>vectors.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/vectors.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>

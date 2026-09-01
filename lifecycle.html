@@ -1,22 +1,263 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Understand every stage of a BLOCK-20 inscription order, from review to on-chain reveal."><meta name="theme-color" content="#120d09"><title>Your BLOCK-20 order journey</title><link rel="stylesheet" href="site.css"></head><body>
-  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html" aria-label="BLOCK-20 home"><span class="brand-mark">B20</span><span>BLOCK-20</span></a><nav aria-label="Primary navigation"><a href="index.html">Overview</a><a href="guide.html">Start safely</a><a href="lifecycle.html" aria-current="page">Your order</a><a href="reference.html">The inscription</a><a href="mint-hash.html">Mint hash</a></nav><a class="source-link" href="https://inscribe.bitcoinuniverse.io/block20" target="_blank" rel="noreferrer">Open BLOCK-20</a></div></header>
-  <main>
-    <div class="wrap hero compact"><div><p class="eyebrow">Your order journey</p><h1>One payment. One reveal. A result you can follow.</h1><p class="lead">A BLOCK-20 order prepares a commit address and waits for its dedicated Bitcoin payment. Once detected, Universe Inscribe completes the reveal to your chosen receiver.</p></div><aside class="hero-panel"><dl><div><dt>Before payment</dt><dd>Review the exact order and expiry.</dd></div><div><dt>After payment</dt><dd>Wait for detection and reveal.</dd></div><div><dt>After reveal</dt><dd>Verify the transaction and inscription.</dd></div></dl></aside></div>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">The full path</p><h2>Know what each stage means.</h2></div><p>Creating an order does not put an inscription on-chain. The Bitcoin payment begins the commit-and-reveal sequence.</p></div><div class="flow">
-      <article><h3>1. Order created</h3><p>The action is turned into an exact inscription payload. A unique commit address, minimum amount, receiver, and payment window are shown.</p></article>
-      <article><h3>2. Details reviewed</h3><p>You compare the payload and destination with your intent and save the order information.</p></article>
-      <article><h3>3. Commit funded</h3><p>You send one dedicated Bitcoin output to the displayed address. Smaller outputs are not combined.</p></article>
-      <article><h3>4. Payment detected</h3><p>The order recognizes an eligible output at the commit address and begins the reveal.</p></article>
-      <article><h3>5. Inscription revealed</h3><p>The commit output is spent into the reveal transaction, which sends the inscription to the selected receiver.</p></article>
-      <article><h3>6. Result verified</h3><p>You inspect the reveal on Bitcoin and use a compatible reader to understand the BLOCK-20 state.</p></article>
-    </div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Order signals</p><h2>Read the status without guessing.</h2></div><p>Keep the order open after payment. Some stages need time to reach the next Bitcoin transaction.</p></div><div class="status-grid">
-      <article class="status-card"><p class="kicker">Awaiting payment</p><p>No eligible commit payment has been used. Confirm your wallet transaction and wait for detection.</p></article>
-      <article class="status-card"><p class="kicker">Revealed</p><p>A reveal transaction is available. Open it and compare the inscription with your preview.</p></article>
-      <article class="status-card"><p class="kicker">Reveal retrying</p><p>The reveal did not complete on its first attempt. Keep the order record and do not pay again.</p></article>
-      <article class="status-card"><p class="kicker">Needs help</p><p>The order could not complete automatically. Preserve the order and payment details for support.</p></article>
-      <article class="status-card"><p class="kicker">Expired</p><p>The displayed payment window passed without an eligible payment being detected.</p></article>
-    </div><div class="callout danger" style="margin-top:18px"><strong>Do not pay twice.</strong> A slow status update is not a new payment request. Check your wallet transaction and order details first. If the order needs help, preserve the evidence and contact the service you used.</div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Payment safety</p><h2>Keep the commit address single-purpose.</h2></div><p>Send one output at or above the displayed minimum. Do not split the amount, add unrelated funds, reuse an old commit address, or change the receiver after the order is created. If anything is wrong before payment, create a fresh order.</p></div><div class="grid two"><article class="card"><h3>Save before sending</h3><p>Keep the payload, receiver, order identity, commit address, minimum amount, expiry, and fee together.</p></article><article class="card"><h3>Save after sending</h3><p>Keep the wallet transaction ID, then add the reveal transaction ID when it appears.</p></article></div></div></section>
-  </main><footer class="site-footer"><div class="wrap"><p>Ready to create? Read the <a href="guide.html">safe start</a>. To decode the inscription, see <a href="reference.html">what gets written</a>.</p></div></footer>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 lifecycle: from order to reveal to finalized state</title>
+<meta name="description" content="The two BLOCK-20 lifecycles: the writer's commit and reveal order stages with their statuses, and the reader's event states from confirmed through finalized or reverted.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/lifecycle.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 lifecycle">
+<meta property="og:description" content="Order stages, order statuses, payment safety, and the reader's event states for BLOCK-20.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/lifecycle.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html">Specification</a>
+      <a href="guide.html">Guide</a>
+      <a href="reference.html">Reference</a>
+      <a href="lifecycle.html" aria-current="page">Lifecycle</a>
+      <a href="mint-hash.html">Mint anchor</a>
+      <a href="vectors.html">Test vectors</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Lifecycle</p>
+    <h1>Two lifecycles, one inscription</h1>
+    <p class="lead">A BLOCK-20 operation passes through a writer lifecycle that ends when the reveal is mined, and a reader lifecycle that decides whether it ever meant anything. They fail for different reasons, so understanding both is how you tell "my payment failed" apart from "my mint was rejected".</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Writer lifecycle</p>
+      <h2 id="order">From order to reveal</h2>
+      <p>Creating an order puts nothing on Bitcoin. The Bitcoin payment is what starts the commit and reveal sequence.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 840 200" role="img" aria-labelledby="order-title order-desc">
+        <title id="order-title">The BLOCK-20 order lifecycle</title>
+        <desc id="order-desc">Six stages in sequence: order created with an exact payload and a commit address, details reviewed by the user, commit output funded with one dedicated Bitcoin payment, payment detected by the monitor, inscription revealed to the chosen receiver, and the result verified against a reader. The first three stages are off chain, the last three are on chain.</desc>
+        <g fill="none" stroke="var(--d-line)" stroke-width="2">
+          <path d="M148 76 h22"></path><path d="M278 76 h22"></path><path d="M408 76 h22"></path>
+          <path d="M538 76 h22"></path><path d="M668 76 h22"></path>
+        </g>
+        <g>
+          <rect x="18" y="44" width="130" height="64" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="32" y="66" font-size="11" fill="var(--d-accent)" font-family="ui-monospace, monospace" font-weight="700">01</text>
+          <text x="32" y="86" font-size="12" fill="var(--d-text)" font-weight="700">Order created</text>
+          <text x="32" y="101" font-size="10" fill="var(--d-muted)">payload fixed</text>
+        </g>
+        <g>
+          <rect x="170" y="44" width="130" height="64" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="184" y="66" font-size="11" fill="var(--d-accent)" font-family="ui-monospace, monospace" font-weight="700">02</text>
+          <text x="184" y="86" font-size="12" fill="var(--d-text)" font-weight="700">Details reviewed</text>
+          <text x="184" y="101" font-size="10" fill="var(--d-muted)">last chance to stop</text>
+        </g>
+        <g>
+          <rect x="300" y="44" width="130" height="64" rx="4" fill="var(--d-accent-bg)" stroke="var(--d-accent)" stroke-width="3"></rect>
+          <text x="314" y="66" font-size="11" fill="var(--d-accent)" font-family="ui-monospace, monospace" font-weight="700">03</text>
+          <text x="314" y="86" font-size="12" fill="var(--d-text)" font-weight="700">Commit funded</text>
+          <text x="314" y="101" font-size="10" fill="var(--d-muted)">one dedicated output</text>
+        </g>
+        <g>
+          <rect x="430" y="44" width="130" height="64" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="444" y="66" font-size="11" fill="var(--d-accent)" font-family="ui-monospace, monospace" font-weight="700">04</text>
+          <text x="444" y="86" font-size="12" fill="var(--d-text)" font-weight="700">Payment detected</text>
+          <text x="444" y="101" font-size="10" fill="var(--d-muted)">monitor picks it up</text>
+        </g>
+        <g>
+          <rect x="560" y="44" width="130" height="64" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="574" y="66" font-size="11" fill="var(--d-accent)" font-family="ui-monospace, monospace" font-weight="700">05</text>
+          <text x="574" y="86" font-size="12" fill="var(--d-text)" font-weight="700">Reveal mined</text>
+          <text x="574" y="101" font-size="10" fill="var(--d-muted)">inscription exists</text>
+        </g>
+        <g>
+          <rect x="690" y="44" width="130" height="64" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="704" y="66" font-size="11" fill="var(--d-accent)" font-family="ui-monospace, monospace" font-weight="700">06</text>
+          <text x="704" y="86" font-size="12" fill="var(--d-text)" font-weight="700">Result verified</text>
+          <text x="704" y="101" font-size="10" fill="var(--d-muted)">reader decides</text>
+        </g>
+        <path d="M18 130 h412" fill="none" stroke="var(--d-muted)" stroke-width="1" stroke-dasharray="4 4"></path>
+        <text x="18" y="148" font-size="11" fill="var(--d-muted)">nothing on chain yet</text>
+        <path d="M430 130 h390" fill="none" stroke="var(--d-accent)" stroke-width="1" stroke-dasharray="4 4"></path>
+        <text x="820" y="148" font-size="11" text-anchor="end" fill="var(--d-accent)">irreversible from here</text>
+      </svg>
+      <figcaption>Stages 1 and 2 cost nothing. Stage 3 is the point of no return.</figcaption>
+    </figure>
+
+    <div class="grid three">
+      <article class="card"><h3>1. Order created</h3><p>The action becomes an exact inscription payload. A unique commit address, minimum amount, receiver, and payment window are shown. For a mint, the anchor hash is captured here from the current chain tip and never refreshed.</p></article>
+      <article class="card"><h3>2. Details reviewed</h3><p>You compare the payload and destination against your intent, then save the order information. See the <a href="guide.html#checklist">review checklist</a>.</p></article>
+      <article class="card"><h3>3. Commit funded</h3><p>You send one dedicated Bitcoin output to the displayed address, at or above the minimum. Smaller outputs are not combined.</p></article>
+      <article class="card"><h3>4. Payment detected</h3><p>The monitor polls pending orders every 10 seconds. It accepts one eligible output at the commit address worth at least the required amount, prefers a confirmed output, and otherwise takes the largest eligible unconfirmed one.</p></article>
+      <article class="card"><h3>5. Reveal mined</h3><p>The commit output is spent into the reveal transaction, which sends the inscription to the selected receiver. The inscription now exists on Bitcoin regardless of whether it is valid BLOCK-20.</p></article>
+      <article class="card"><h3>6. Result verified</h3><p>You inspect the reveal on Bitcoin and check the token effect in a reader. This is where a mint's anchor is finally tested.</p></article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Order statuses</p>
+      <h2 id="statuses">Reading the status without guessing</h2>
+      <p>Keep the order record after payment. Some stages need time to reach the next Bitcoin transaction.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>Order statuses and the correct response to each.</caption>
+        <thead><tr><th scope="col">Status</th><th scope="col">What it means</th><th scope="col">What to do</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Awaiting payment</th><td>No eligible commit payment has been used yet.</td><td>Confirm your wallet transaction and wait for detection. Do not send a second payment.</td></tr>
+          <tr><th scope="row">Revealed</th><td>A reveal transaction exists and its ID is available.</td><td>Open it and compare the inscription with your saved preview.</td></tr>
+          <tr><th scope="row">Reveal retrying</th><td>Signing or broadcast did not succeed on the first attempt. The monitor retries up to five times.</td><td>Keep the order record. Do not pay again.</td></tr>
+          <tr><th scope="row">Needs help</th><td>Retries were exhausted and the order could not complete automatically.</td><td>Preserve the order, the commit transaction ID, and the payload, then contact the service you used.</td></tr>
+          <tr><th scope="row">Expired</th><td>The initial payment window, one hour from creation, passed with no eligible payment detected.</td><td>Do not fund an expired order casually. Expiry is a monitor behavior, not a hard gate, so a late payment can still be revealed and a late mint reveal can fail the freshness rule.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout bad">
+      <p><strong>Do not pay twice.</strong> A slow status update is not a new payment request. Check your wallet transaction and the order details first. If the order needs help, preserve the evidence rather than sending more Bitcoin.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Payment safety</p>
+      <h2 id="payment">Keep the commit address single purpose</h2>
+    </div>
+    <p>Send one output at or above the displayed minimum. Do not split the amount, add unrelated funds, reuse an old commit address, or change the receiver after the order is created. If anything is wrong before payment, create a fresh order.</p>
+    <div class="grid two">
+      <article class="card">
+        <h3>Save before sending</h3>
+        <p>Keep the payload, receiver, order identity, commit address, minimum amount, expiry, and fee together. A public order read later will not return all of it.</p>
+      </article>
+      <article class="card">
+        <h3>Save after sending</h3>
+        <p>Keep the wallet transaction ID, then add the commit output index and the reveal transaction ID when they appear.</p>
+      </article>
+    </div>
+    <div class="callout warn">
+      <p>An omitted or empty receiver address makes the reveal output return to the writer's own generated commit address, which is controlled by server-held key material. Always supply a Bitcoin address you control.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Reader lifecycle</p>
+      <h2 id="events">What happens after the reveal is mined</h2>
+      <p>The writer's job ends when the reveal exists. The reader's job starts there, and its verdict is what changes a balance.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 840 210" role="img" aria-labelledby="event-title event-desc">
+        <title id="event-title">Reader event states for a BLOCK-20 inscription</title>
+        <desc id="event-desc">An inscription is observed and either rejected, producing no event at all, or accepted as a confirmed event. A confirmed event accumulates confirmations and becomes finalized once it is below the reader's finality depth. Before finalization it can be reverted by a reorganization, which reverses its exact deltas. A finalized event cannot be reverted.</desc>
+        <g>
+          <rect x="18" y="76" width="150" height="60" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="93" y="102" font-size="13" text-anchor="middle" fill="var(--d-text)" font-weight="700">Observed</text>
+          <text x="93" y="120" font-size="10" text-anchor="middle" fill="var(--d-muted)">inscription in a block</text>
+        </g>
+        <g fill="none" stroke="var(--d-line)" stroke-width="2">
+          <path d="M168 106 h30 v-62 h40"></path>
+          <path d="M168 106 h70"></path>
+        </g>
+        <g>
+          <rect x="238" y="14" width="170" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2" stroke-dasharray="6 4"></rect>
+          <text x="323" y="40" font-size="12" text-anchor="middle" fill="var(--d-muted)" font-weight="700">Rejected or ignored</text>
+          <text x="323" y="58" font-size="10" text-anchor="middle" fill="var(--d-muted)">no event, no balance change</text>
+        </g>
+        <g>
+          <rect x="238" y="76" width="170" height="60" rx="4" fill="var(--d-accent-bg)" stroke="var(--d-accent)" stroke-width="3"></rect>
+          <text x="323" y="102" font-size="13" text-anchor="middle" fill="var(--d-accent)" font-weight="700">Confirmed</text>
+          <text x="323" y="120" font-size="10" text-anchor="middle" fill="var(--d-muted)">deltas applied</text>
+        </g>
+        <g fill="none" stroke="var(--d-line)" stroke-width="2">
+          <path d="M408 106 h40 v62 h40"></path>
+          <path d="M408 106 h80"></path>
+        </g>
+        <g>
+          <rect x="488" y="76" width="170" height="60" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="573" y="102" font-size="13" text-anchor="middle" fill="var(--d-text)" font-weight="700">Finalized</text>
+          <text x="573" y="120" font-size="10" text-anchor="middle" fill="var(--d-muted)">below finality depth</text>
+        </g>
+        <g>
+          <rect x="488" y="140" width="170" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="573" y="166" font-size="12" text-anchor="middle" fill="var(--d-text)" font-weight="700">Reverted</text>
+          <text x="573" y="184" font-size="10" text-anchor="middle" fill="var(--d-muted)">reorganization, deltas reversed</text>
+        </g>
+        <text x="700" y="106" font-size="11" fill="var(--d-muted)">no longer reversible</text>
+        <text x="700" y="170" font-size="11" fill="var(--d-muted)">may replay on the new branch</text>
+      </svg>
+      <figcaption>Rejection is silent: there is no failed event, only an inscription that changed nothing.</figcaption>
+    </figure>
+
+    <ul>
+      <li>An inscription that fails any rule produces no event at all. Do not expect an error record to appear anywhere on chain.</li>
+      <li>An accepted operation becomes a confirmed event with complete block placement and a confirmation count of <code>tip height - block height + 1</code>.</li>
+      <li>Once the event's height drops below the finalized height, which defaults to six confirmations behind the tip, it can no longer be reverted by the reader.</li>
+      <li>Above that line, a reorganization can revert it. Reverting reverses the exact recorded deltas, restores or removes transfer reservations, and then the replacement branch is replayed.</li>
+      <li>For a mint, replay re-resolves the anchor against the new history. A mint whose anchor block was orphaned does not come back.</li>
+    </ul>
+    <div class="callout">
+      <p>Practical rule: a BLOCK-20 mint is settled when its reveal is at least six blocks deep <em>and</em> its anchor block is also still on the active chain. Until then, treat the balance as provisional. The <a href="mint-hash.html#verifier">verifier</a> lets you check the anchor at any time.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>lifecycle.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/lifecycle.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>
