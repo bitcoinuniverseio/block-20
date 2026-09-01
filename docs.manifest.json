@@ -4,7 +4,7 @@
   "name": "BLOCK-20",
   "classification": "protocol",
   "repository": "bitcoinuniverseio/block-20",
-  "documentationUrl": "https://docs.bitcoinuniverse.io/protocols/block-20/",
+  "documentationUrl": "https://docs.bitcoinuniverse.io/protocols/block20/",
   "docsRoot": ".",
   "sourceRef": "main",
   "lifecycle": "experimental",
@@ -33,8 +33,8 @@
     "bitcoinuniverseio"
   ],
   "lastVerified": {
-    "commit": "87a89f566268a1c6b47b3beab9cdc35aebb3a417",
-    "timestamp": "2026-09-01T04:30:00Z"
+    "commit": "7f310b2b0d6f19ceb007ba6e47354e464478ad38",
+    "timestamp": "2026-09-01T12:00:00Z"
   },
   "securityClassification": "public"
 }
