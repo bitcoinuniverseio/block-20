@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="BLOCK-20">
+  <title>BLOCK-20</title>
+  <rect width="32" height="32" rx="4" fill="#0e1218"/>
+  <rect x="5.5" y="5.5" width="21" height="21" rx="2.5" fill="none" stroke="#f2a938" stroke-width="3"/>
+  <rect x="12" y="12" width="8" height="8" rx="1" fill="#f2a938"/>
+</svg>
