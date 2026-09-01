@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 specification: numbered rules for readers and writers</title>
+<meta name="description" content="Normative BLOCK-20 rules: inscription envelope, payload grammar, ticker identity, the mint anchor derivation, deploy mint and transfer semantics, ordering, and every rejection condition.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/spec.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 specification">
+<meta property="og:description" content="Numbered normative rules for the BLOCK-20 inscription token protocol, including the mint anchor derivation.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/spec.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html" aria-current="page">Specification</a>
+      <a href="guide.html">Guide</a>
+      <a href="reference.html">Reference</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="mint-hash.html">Mint anchor</a>
+      <a href="vectors.html">Test vectors</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Normative</p>
+    <h1>BLOCK-20 specification</h1>
+    <p class="lead">Rules a reader applies to decide what a BLOCK-20 inscription means. Every rule below is drawn from the Bitcoin Universe writer implementation and the <code>bitcoin-universe-block20-v1</code> reader profile. Rule identifiers are stable.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <nav class="toc" aria-labelledby="toc-h">
+      <h2 id="toc-h">Contents</h2>
+      <ol>
+        <li><a href="#scope">Scope and authority</a></li>
+        <li><a href="#carrier">Carrier and envelope</a></li>
+        <li><a href="#grammar">Payload grammar</a></li>
+        <li><a href="#identity">Identity and numbers</a></li>
+        <li><a href="#deploy">Deploy</a></li>
+        <li><a href="#mint">Mint and the anchor</a></li>
+        <li><a href="#transfer">Transfer</a></li>
+        <li><a href="#ordering">Ordering and state</a></li>
+        <li><a href="#invalid">Invalidity conditions</a></li>
+        <li><a href="#reorg">Reorganization and finality</a></li>
+        <li><a href="#conformance">Conformance</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="scope">1. Scope and authority</h2>
+    <p>This document specifies how a BLOCK-20 reader interprets Bitcoin inscriptions, and what a BLOCK-20 writer emits. It is not a Bitcoin consensus rule and not a guarantee that every third-party reader will agree.</p>
+    <p>Keywords: <strong>MUST</strong> and <strong>MUST NOT</strong> describe behavior required for conformance with this profile. <strong>Reject</strong> means the inscription has no effect on token state. <strong>Ignore</strong> means the inscription is not an error but still changes nothing.</p>
+    <div class="callout">
+      <p>Two implementations sit behind these rules. The <strong>writer</strong> is Bitcoin Universe Inscribe, which serializes the payload and broadcasts the inscription. The <strong>reader</strong> is the <code>bitcoin-universe-block20-v1</code> profile, which computes ticker state, balances, and supply. The writer performs no token validation. All validity is decided by the reader.</p>
+    </div>
+
+    <h2 id="carrier">2. Carrier and envelope</h2>
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R2.1</span><div class="rule-body"><p>A BLOCK-20 message MUST be carried as the content of an Ordinals inscription. The Bitcoin Universe writer reveals it through a taproot script-path spend of a dedicated commit output. The carrier MUST NOT be an <code>OP_RETURN</code> output.</p></div></li>
+      <li class="rule"><span class="rule-id">R2.2</span><div class="rule-body"><p>The inscription content type MUST match <code>text/plain</code> or <code>application/json</code>, compared case-insensitively, optionally followed by parameters after a semicolon. The writer emits <code>text/plain;charset=utf-8</code>. Any other content type is ignored.</p></div></li>
+      <li class="rule"><span class="rule-id">R2.3</span><div class="rule-body"><p>Content length MUST be at least 1 byte and at most 2048 bytes. Empty content and oversized content are ignored without being parsed.</p></div></li>
+      <li class="rule"><span class="rule-id">R2.4</span><div class="rule-body"><p>The operating address for an inscription is the address that holds it at the block being processed: the reveal owner for a deploy, mint, or transfer inscription, and the destination for a later move. It MUST be a Bitcoin address supported by the reader for the configured network. Bech32 addresses MUST be entirely lowercase or entirely uppercase, and MUST carry the <code>bc1</code> prefix on mainnet or <code>tb1</code> on testnet. Base58 addresses MUST start with <code>1</code> or <code>3</code> on mainnet, or <code>m</code>, <code>n</code>, or <code>2</code> on testnet.</p></div></li>
+      <li class="rule"><span class="rule-id">R2.5</span><div class="rule-body"><p>A deploy, mint, or transfer inscription whose operating address is absent or unsupported MUST be rejected. For a transfer settlement, an absent or unsupported destination is not a rejection: it settles as a burn (see R7.9).</p></div></li>
+      <li class="rule"><span class="rule-id">R2.6</span><div class="rule-body"><p>A reader MUST associate a BLOCK-20 reveal with the output it was inscribed into. If the inscription has already moved away from its reveal transaction before the reader observes it, the reader MUST fail closed rather than guess an owner.</p></div></li>
+    </ul>
+
+    <h2 id="grammar">3. Payload grammar</h2>
+    <p>BLOCK-20 does not accept general JSON. It accepts a flat object whose keys and values are all JSON strings, parsed by a strict grammar. This is deliberate: it removes the encoding ambiguity that lets two readers disagree about the same bytes.</p>
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R3.1</span><div class="rule-body"><p>Content MUST decode as strict UTF-8. Any invalid sequence, including an unpaired surrogate or an overlong encoding, rejects the inscription.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.2</span><div class="rule-body"><p>The decoded text MUST be exactly one JSON object. Whitespace is permitted before the opening brace, around keys, colons, commas, and after the closing brace. Any non-whitespace content after the closing brace rejects the inscription.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.3</span><div class="rule-body"><p>Every key and every value MUST be a JSON string. A number, boolean, <code>null</code>, array, or nested object anywhere in the payload rejects the inscription. <code>{"amt":5}</code> is invalid; <code>{"amt":"5"}</code> is the valid form.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.4</span><div class="rule-body"><p>A repeated key rejects the inscription. The reader MUST NOT apply last-wins or first-wins recovery.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.5</span><div class="rule-body"><p>A raw control character below <code>U+0020</code> inside a string rejects the inscription. Escaped forms such as <code>\n</code> are parsed as JSON escapes and are permitted by the grammar, though no BLOCK-20 field accepts a control character in its value.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.6</span><div class="rule-body"><p>An unterminated string, a missing colon between key and value, or a missing comma between members rejects the inscription.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.7</span><div class="rule-body"><p>A payload without a <code>p</code> field, or whose <code>p</code> is not exactly the lowercase string <code>block-20</code>, is not a BLOCK-20 message and MUST be ignored. The comparison is case sensitive and exact.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.8</span><div class="rule-body"><p>Each operation defines an exact field set. A payload missing a required field, or carrying any field outside the allowed set for its operation, MUST be rejected. There are no reserved extension fields.</p></div></li>
+      <li class="rule"><span class="rule-id">R3.9</span><div class="rule-body"><p><code>op</code> MUST be exactly <code>deploy</code>, <code>mint</code>, or <code>transfer</code>. Any other value is ignored.</p></div></li>
+    </ul>
+
+    <div class="code-card">
+      <header><strong>Field sets by operation</strong><span>exact, no extensions</span></header>
+      <pre><code>deploy    required: p, op, tick, max, lim      optional: des
+mint      required: p, op, tick, amt, hash     optional: none
+transfer  required: p, op, tick, amt           optional: none</code></pre>
+    </div>
+
+    <h2 id="identity">4. Identity and numbers</h2>
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R4.1</span><div class="rule-body"><p><code>tick</code> MUST match <code>^[A-Za-z0-9]{1,5}$</code>: one to five ASCII letters or digits. No spaces, punctuation, emoji, or non-ASCII characters.</p></div></li>
+      <li class="rule"><span class="rule-id">R4.2</span><div class="rule-body"><p>Ticker identity is the lowercase form of <code>tick</code>. <code>BLK</code>, <code>Blk</code>, and <code>blk</code> are the same token. The display form recorded for a ticker is the exact casing of its deploy.</p></div></li>
+      <li class="rule"><span class="rule-id">R4.3</span><div class="rule-body"><p>The first valid deploy of an identity wins. Every later deploy of the same identity MUST be ignored, whatever supply or limit it declares.</p></div></li>
+      <li class="rule"><span class="rule-id">R4.4</span><div class="rule-body"><p>Every numeric field (<code>max</code>, <code>lim</code>, <code>amt</code>) MUST match <code>^[1-9]\d*$</code>. Leading zeros, a leading <code>+</code> or <code>-</code>, a decimal point, an exponent, whitespace, thousands separators, and the value <code>0</code> are all invalid.</p></div></li>
+      <li class="rule"><span class="rule-id">R4.5</span><div class="rule-body"><p>Numeric values MUST NOT exceed 2<sup>128</sup> minus 1, that is <code>340282366920938463463374607431768211455</code>.</p></div></li>
+      <li class="rule"><span class="rule-id">R4.6</span><div class="rule-body"><p>BLOCK-20 has zero decimal places. Every amount is a whole unit. There is no smaller subdivision and no display scaling.</p></div></li>
+    </ul>
+
+    <h2 id="deploy">5. Deploy</h2>
+    <div class="code-card">
+      <header><strong>Deploy payload</strong><span>defines a ticker</span></header>
+      <pre><code>{"p":"block-20","op":"deploy","tick":"BLK","max":"21000000","lim":"1000"}</code></pre>
+    </div>
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R5.1</span><div class="rule-body"><p>Field set is exactly <code>p</code>, <code>op</code>, <code>tick</code>, <code>max</code>, <code>lim</code>, with <code>des</code> permitted as the only optional field.</p></div></li>
+      <li class="rule"><span class="rule-id">R5.2</span><div class="rule-body"><p><code>max</code> is the maximum supply and <code>lim</code> is the maximum amount creditable by a single mint. Both MUST satisfy R4.4 and R4.5.</p></div></li>
+      <li class="rule"><span class="rule-id">R5.3</span><div class="rule-body"><p><code>lim</code> MUST NOT exceed <code>max</code>. A deploy declaring a per-mint limit larger than the whole supply is rejected.</p></div></li>
+      <li class="rule"><span class="rule-id">R5.4</span><div class="rule-body"><p><code>des</code>, when present, MUST be at most 256 bytes of UTF-8 and MUST NOT contain a control character. It is descriptive metadata with no effect on token state.</p></div></li>
+      <li class="rule"><span class="rule-id">R5.5</span><div class="rule-body"><p>A deploy has no economic effect. Total, circulating, minted, and burned supply all start at zero. The deploying address receives nothing.</p></div></li>
+      <li class="rule"><span class="rule-id">R5.6</span><div class="rule-body"><p>The deploy height is the height of the block that reveals the deploy inscription. It becomes the lower bound for every mint anchor of that ticker (R6.6).</p></div></li>
+      <li class="rule"><span class="rule-id">R5.7</span><div class="rule-body"><p>Deployment metadata is immutable. A reader MUST NOT allow a later inscription to change a ticker's display form, decimals, maximum supply, or deployer.</p></div></li>
+    </ul>
+
+    <h2 id="mint">6. Mint and the anchor</h2>
+    <div class="code-card">
+      <header><strong>Mint payload</strong><span>credits supply, anchored to a block</span></header>
+      <pre><code>{"p":"block-20","op":"mint","tick":"BLK","amt":"1000","hash":"&lt;64 lowercase hex&gt;"}</code></pre>
+    </div>
+    <p>The anchor is the part of BLOCK-20 that is not shared with other inscription token protocols. A mint does not merely claim an amount, it names a block, and the reader tests that claim against the chain.</p>
+
+    <h3 id="anchor-derivation">6.1 The anchor derivation</h3>
+    <p>Let <code>H</code> be the value of <code>hash</code>, <code>R</code> the height of the block revealing the mint inscription, <code>D</code> the ticker's deploy height, and <code>W</code> the reader's freshness window in blocks.</p>
+    <div class="code-card">
+      <header><strong>Derivation</strong><span>evaluated in order</span></header>
+      <pre><code>step 1   H matches ^[0-9a-f]{64}$                     else reject
+step 2   A := height of the block whose ID is H,
+         resolved against the active chain            else reject
+step 3   A &gt;= D                                        else reject
+step 4   A &lt;  R                                        else reject
+step 5   R - A &lt;= W                                    else reject
+step 6   remaining := max - minted
+         if remaining &lt;= 0                             then ignore
+step 7   credited := min(amt, remaining)</code></pre>
+    </div>
+
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R6.1</span><div class="rule-body"><p>Field set is exactly <code>p</code>, <code>op</code>, <code>tick</code>, <code>amt</code>, <code>hash</code>. No optional fields.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.2</span><div class="rule-body"><p>The ticker MUST have an active deployment at the mint's block. A mint for an unknown or deactivated ticker is ignored.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.3</span><div class="rule-body"><p><code>amt</code> MUST satisfy R4.4 and MUST NOT exceed the deployment's <code>lim</code>. A mint above the per-mint limit is rejected outright and is not reduced to the limit.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.4</span><div class="rule-body"><p><code>hash</code> MUST match <code>^[0-9a-f]{64}$</code>. Uppercase hex, a <code>0x</code> prefix, surrounding whitespace, a truncated hash, a transaction ID that is not a block ID, an inscription ID, a numeric height, a Merkle root, and a payload digest are all rejected by this rule or by R6.5.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.5</span><div class="rule-body"><p>The reader MUST resolve <code>hash</code> to a height on the <em>active</em> chain. Resolution succeeds only when a Bitcoin node knows the header, the header has at least one confirmation, and the block currently at that height hashes to the same value. A header from an orphaned branch fails this test, so its hash cannot anchor a mint.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.6</span><div class="rule-body"><p>The anchor height MUST be greater than or equal to the ticker's deploy height. A mint cannot point at a block from before the ticker existed.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.7</span><div class="rule-body"><p>The anchor height MUST be strictly less than the reveal height. A mint cannot anchor to its own block or to any later block.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.8</span><div class="rule-body"><p>The distance <code>R - A</code> MUST NOT exceed the freshness window. The reference reader uses 144 blocks by default, roughly one day of Bitcoin. The window is an operator setting in the range 1 to 10000, so a mint near the boundary can be accepted by one reader and rejected by another.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.9</span><div class="rule-body"><p>If remaining supply (<code>max</code> minus already-minted) is zero or less, the mint is ignored and produces no event. Supply is not exceeded and no partial credit is given after exhaustion.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.10</span><div class="rule-body"><p>When remaining supply is positive but smaller than <code>amt</code>, the mint is credited for exactly the remaining amount. This partial final mint is valid, and the reader records both the requested and credited amounts.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.11</span><div class="rule-body"><p>A credited mint increases the reveal owner's balance, total supply, circulating supply, and minted supply by the credited amount. Burned supply is unchanged.</p></div></li>
+      <li class="rule"><span class="rule-id">R6.12</span><div class="rule-body"><p>Failing any of R6.3 through R6.8 credits nothing. There is no partial credit for an invalid anchor.</p></div></li>
+    </ul>
+
+    <div class="callout warn">
+      <p><strong>Where the writer gets the hash.</strong> Bitcoin Universe Inscribe reads the current chain tip from its configured block source while creating the order, and writes that block ID into both the order record and the payload. It selects the value before funding, reveal, or confirmation, and it does not refresh the value before reveal. Because the tip is always mined before the later reveal block, a normal order satisfies R6.7 naturally. It can still fail R6.8 if the order sits unfunded for more than the freshness window.</p>
+    </div>
+
+    <h2 id="transfer">7. Transfer</h2>
+    <div class="code-card">
+      <header><strong>Transfer payload</strong><span>reserves, then settles on the first move</span></header>
+      <pre><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"250"}</code></pre>
+    </div>
+    <p>A transfer is two chain events, not one. Inscribing reserves an amount. Moving the inscription decides where that amount lands.</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 840 240" role="img" aria-labelledby="transfer-diagram-title transfer-diagram-desc">
+        <title id="transfer-diagram-title">Transfer inscription state machine</title>
+        <desc id="transfer-diagram-desc">A transfer inscription starts in the reserved state when it is revealed, which reduces available balance without changing the holder total. Its first later move settles it in one of three ways: sent to a supported address, which moves the balance; spent in fees, which releases the reservation back to the owner; or burnt or sent to an unsupported destination, which destroys the reserved amount and reduces supply. Any move after settlement has no effect.</desc>
+        <g>
+          <rect x="20" y="86" width="180" height="66" rx="4" fill="var(--d-accent-bg)" stroke="var(--d-accent)" stroke-width="3"></rect>
+          <text x="110" y="112" font-size="14" font-weight="700" text-anchor="middle" fill="var(--d-accent)">Reserved</text>
+          <text x="110" y="132" font-size="11" text-anchor="middle" fill="var(--d-muted)">available balance reduced</text>
+        </g>
+        <g fill="none" stroke="var(--d-line)" stroke-width="2">
+          <path d="M200 119 h60 v-72 h80"></path>
+          <path d="M200 119 h140"></path>
+          <path d="M200 119 h60 v72 h80"></path>
+        </g>
+        <g>
+          <rect x="340" y="18" width="200" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="356" y="42" font-size="13" font-weight="700" fill="var(--d-text)">Settled: transferred</text>
+          <text x="356" y="62" font-size="11" fill="var(--d-muted)">balance moves, supply unchanged</text>
+        </g>
+        <g>
+          <rect x="340" y="90" width="200" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="356" y="114" font-size="13" font-weight="700" fill="var(--d-text)">Settled: fee return</text>
+          <text x="356" y="134" font-size="11" fill="var(--d-muted)">reservation released to owner</text>
+        </g>
+        <g>
+          <rect x="340" y="162" width="200" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="356" y="186" font-size="13" font-weight="700" fill="var(--d-text)">Settled: burn</text>
+          <text x="356" y="206" font-size="11" fill="var(--d-muted)">supply reduced permanently</text>
+        </g>
+        <g fill="none" stroke="var(--d-line)" stroke-width="2" stroke-dasharray="5 4">
+          <path d="M540 47 h50 v72"></path>
+          <path d="M540 119 h50"></path>
+          <path d="M540 191 h50 v-72"></path>
+        </g>
+        <g>
+          <rect x="600" y="90" width="220" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2" stroke-dasharray="6 5"></rect>
+          <text x="710" y="114" font-size="13" font-weight="700" text-anchor="middle" fill="var(--d-muted)">Later moves</text>
+          <text x="710" y="134" font-size="11" text-anchor="middle" fill="var(--d-muted)">no token effect</text>
+        </g>
+      </svg>
+      <figcaption>The first move after a transfer inscription is revealed decides the outcome. Everything after that is inert.</figcaption>
+    </figure>
+
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R7.1</span><div class="rule-body"><p>Field set is exactly <code>p</code>, <code>op</code>, <code>tick</code>, <code>amt</code>.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.2</span><div class="rule-body"><p>The ticker MUST have an active deployment. A transfer inscription for an unknown ticker is ignored.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.3</span><div class="rule-body"><p>Available balance is the owner's balance minus the sum of that owner's unsettled reservations for the same ticker. If available balance is less than <code>amt</code>, the transfer inscription is ignored and no reservation is created.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.4</span><div class="rule-body"><p>An inscription that already holds a reservation MUST NOT create a second one.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.5</span><div class="rule-body"><p>Revealing a valid transfer inscription creates a reservation. Holder balance and every supply figure are unchanged. Only available balance falls.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.6</span><div class="rule-body"><p>The first later move of that inscription settles the reservation. Settlement is evaluated once and only once.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.7</span><div class="rule-body"><p>If the move sends the inscription to a supported address, the reserved amount moves from the owner to that address. Supply figures are unchanged. When the destination equals the owner, the reservation is released and the balance is unchanged, with the movement still recorded.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.8</span><div class="rule-body"><p>If the inscription is spent in transaction fees, the reservation is released back to the owner. No balance and no supply figure changes.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.9</span><div class="rule-body"><p>If the inscription is burnt, or moves to a destination the reader cannot interpret as a supported address, the reserved amount is destroyed. The owner's balance falls, total and circulating supply fall, and burned supply rises by the same amount. Minted supply is unchanged, so a burn does not free capacity for new mints.</p></div></li>
+      <li class="rule"><span class="rule-id">R7.10</span><div class="rule-body"><p>Any move of the inscription after settlement has no token effect.</p></div></li>
+    </ul>
+
+    <h2 id="ordering">8. Ordering and state transitions</h2>
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R8.1</span><div class="rule-body"><p>Blocks MUST be processed in ascending height with no gaps. A reader that cannot obtain a contiguous range MUST stop rather than skip.</p></div></li>
+      <li class="rule"><span class="rule-id">R8.2</span><div class="rule-body"><p>Within a block, items are ordered by transaction index ascending. Where a move and a new inscription share a transaction index, the move is processed first. Ties are broken by ordinal (block transfer index for a move, inscription number for a reveal), then by inscription ID.</p></div></li>
+      <li class="rule"><span class="rule-id">R8.3</span><div class="rule-body"><p>State is applied in that order within the block. Two mints in the same block compete for the same remaining supply, and the earlier one wins.</p></div></li>
+      <li class="rule"><span class="rule-id">R8.4</span><div class="rule-body"><p>A deploy and a mint of the same ticker in the same block are valid when the deploy is ordered first. In that case the anchor lower bound (R6.6) is that same block height, so the anchor must be an earlier block, which R6.7 already requires.</p></div></li>
+      <li class="rule"><span class="rule-id">R8.5</span><div class="rule-body"><p>Each accepted operation MUST produce a stable event identity that does not change when the same block is replayed. The reference reader derives it from the operation and the inscription ID, plus the moving transaction ID for a settlement.</p></div></li>
+      <li class="rule"><span class="rule-id">R8.6</span><div class="rule-body"><p>Minted supply never decreases through a burn. The supply invariant is: total equals minted minus burned, and circulating equals total.</p></div></li>
+    </ul>
+
+    <h2 id="invalid">9. Invalidity conditions</h2>
+    <p>Every condition below results in no change to token state. The distinction between "ignored" and "rejected" matters only for reader diagnostics.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Conditions under which a BLOCK-20 inscription changes nothing.</caption>
+        <thead><tr><th scope="col">Condition</th><th scope="col">Applies to</th><th scope="col">Rule</th></tr></thead>
+        <tbody>
+          <tr><td>Content type is not text/plain or application/json</td><td>All</td><td>R2.2</td></tr>
+          <tr><td>Content is empty or larger than 2048 bytes</td><td>All</td><td>R2.3</td></tr>
+          <tr><td>Operating address absent or unsupported for the network</td><td>Deploy, mint, transfer reveal</td><td>R2.5</td></tr>
+          <tr><td>Content is not strict UTF-8</td><td>All</td><td>R3.1</td></tr>
+          <tr><td>Trailing content after the JSON object</td><td>All</td><td>R3.2</td></tr>
+          <tr><td>Any non-string key or value</td><td>All</td><td>R3.3</td></tr>
+          <tr><td>Duplicate field</td><td>All</td><td>R3.4</td></tr>
+          <tr><td>Raw control character in a string</td><td>All</td><td>R3.5</td></tr>
+          <tr><td>Missing required field or any unknown field</td><td>All</td><td>R3.8</td></tr>
+          <tr><td>Ticker outside one to five ASCII alphanumerics</td><td>All</td><td>R4.1</td></tr>
+          <tr><td>Amount with leading zero, sign, decimal point, or value zero</td><td>All numeric fields</td><td>R4.4</td></tr>
+          <tr><td>Amount above 2<sup>128</sup> minus 1</td><td>All numeric fields</td><td>R4.5</td></tr>
+          <tr><td>Ticker identity already deployed</td><td>Deploy</td><td>R4.3</td></tr>
+          <tr><td>Per-mint limit exceeds maximum supply</td><td>Deploy</td><td>R5.3</td></tr>
+          <tr><td>Description longer than 256 bytes or containing a control character</td><td>Deploy</td><td>R5.4</td></tr>
+          <tr><td>Ticker has no active deployment</td><td>Mint, transfer</td><td>R6.2, R7.2</td></tr>
+          <tr><td>Mint amount above the per-mint limit</td><td>Mint</td><td>R6.3</td></tr>
+          <tr><td>Hash not 64 lowercase hex characters</td><td>Mint</td><td>R6.4</td></tr>
+          <tr><td>Hash does not resolve to a block on the active chain</td><td>Mint</td><td>R6.5</td></tr>
+          <tr><td>Anchor height below the deploy height</td><td>Mint</td><td>R6.6</td></tr>
+          <tr><td>Anchor height at or above the reveal height</td><td>Mint</td><td>R6.7</td></tr>
+          <tr><td>Anchor older than the freshness window</td><td>Mint</td><td>R6.8</td></tr>
+          <tr><td>Supply already exhausted</td><td>Mint</td><td>R6.9</td></tr>
+          <tr><td>Available balance below the transfer amount</td><td>Transfer</td><td>R7.3</td></tr>
+          <tr><td>Inscription already holds a reservation</td><td>Transfer</td><td>R7.4</td></tr>
+          <tr><td>Move of an inscription that is already settled</td><td>Transfer settlement</td><td>R7.10</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="reorg">10. Reorganization and finality</h2>
+    <ul class="rules">
+      <li class="rule"><span class="rule-id">R10.1</span><div class="rule-body"><p>When a block the reader has applied is no longer on the active chain, the reader MUST invalidate every event from the replaced branch before applying the replacement branch.</p></div></li>
+      <li class="rule"><span class="rule-id">R10.2</span><div class="rule-body"><p>Invalidation MUST proceed newest first: descending block height, then descending transaction index, then descending event index.</p></div></li>
+      <li class="rule"><span class="rule-id">R10.3</span><div class="rule-body"><p>Invalidation MUST reverse the exact recorded wallet and supply deltas of each event, restore transfer reservations that were settled on the replaced branch, and remove reservations that were created on it.</p></div></li>
+      <li class="rule"><span class="rule-id">R10.4</span><div class="rule-body"><p>Invalidating a deploy deactivates the ticker. A reader MUST NOT leave an applied mint or transfer depending on an inactive deployment, and MUST fail closed if that state is reached.</p></div></li>
+      <li class="rule"><span class="rule-id">R10.5</span><div class="rule-body"><p>Events at or below the finalized height MUST NOT be invalidated. A reorganization that would require this is a fatal condition: the reader stops rather than producing a state it cannot justify.</p></div></li>
+      <li class="rule"><span class="rule-id">R10.6</span><div class="rule-body"><p>The finalized height is the tip height minus the reader's finality depth, defaulting to 6 confirmations, and it MUST NOT move backward.</p></div></li>
+      <li class="rule"><span class="rule-id">R10.7</span><div class="rule-body"><p>Because R6.5 resolves anchors against the active chain at the time of processing, a mint whose anchor block is orphaned by a reorganization does not survive the replay. The same inscription bytes can be valid on one chain history and invalid on another.</p></div></li>
+    </ul>
+
+    <h2 id="conformance">11. Conformance</h2>
+    <p>An implementation conforms to <code>bitcoin-universe-block20-v1</code> when it satisfies every MUST above and reproduces the outcomes in the <a href="vectors.html">test vectors</a>. At a minimum, cover:</p>
+    <ul>
+      <li>the flat string object grammar, including duplicate keys, non-string values, trailing content, and control characters;</li>
+      <li>exact field sets for each operation and rejection of unknown fields;</li>
+      <li>ticker case folding and first-deploy-wins;</li>
+      <li>every branch of the anchor derivation, including the exact boundaries at <code>A = D</code>, <code>A = R - 1</code>, <code>A = R</code>, and <code>R - A = W</code>;</li>
+      <li>partial final mints and the ignoring of mints after exhaustion;</li>
+      <li>reservation, transfer settlement, fee return, burn, and inert later moves;</li>
+      <li>within-block ordering with two competing mints;</li>
+      <li>reorganization invalidation ordering and the finalized-height refusal.</li>
+    </ul>
+    <p>A reader that relaxes any rule here MUST NOT describe itself as implementing this profile, because a relaxed rule changes balances.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>spec.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/spec.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>

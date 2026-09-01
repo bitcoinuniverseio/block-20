@@ -1,19 +1,258 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Understand the Bitcoin block hash carried by a BLOCK-20 mint inscription."><meta name="theme-color" content="#120d09"><title>The BLOCK-20 mint hash</title><link rel="stylesheet" href="site.css"></head><body>
-  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html" aria-label="BLOCK-20 home"><span class="brand-mark">B20</span><span>BLOCK-20</span></a><nav aria-label="Primary navigation"><a href="index.html">Overview</a><a href="guide.html">Start safely</a><a href="lifecycle.html">Your order</a><a href="reference.html">The inscription</a><a href="mint-hash.html" aria-current="page">Mint hash</a></nav><a class="source-link" href="https://inscribe.bitcoinuniverse.io/block20?action=mint" target="_blank" rel="noreferrer">Open mint</a></div></header>
-  <main>
-    <div class="wrap hero compact"><div><p class="eyebrow">Mint hash</p><h1>A Bitcoin block reference captured for your mint.</h1><p class="lead">When a BLOCK-20 mint order is created, its payload includes the Bitcoin tip block hash observed at that moment. The value becomes part of the exact inscription you review.</p></div><aside class="hero-panel"><dl><div><dt>Captured</dt><dd>When the order is created</dd></div><div><dt>Stored</dt><dd>Inside the mint payload</dd></div><div><dt>Not the same as</dt><dd>The later reveal transaction or block</dd></div></dl></aside></div>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Why it is there</p><h2>The mint records a point in Bitcoin history.</h2></div><p>The block hash gives the mint inscription a specific reference chosen before payment and reveal. It is not chosen by the wallet, and it should match the hash shown both in the order details and inside the payload.</p></div><div class="grid three">
-      <article class="card"><p class="kicker">1</p><h3>Order begins</h3><p>Universe Inscribe observes the current Bitcoin tip while preparing the mint.</p></article>
-      <article class="card"><p class="kicker">2</p><h3>Hash is embedded</h3><p>The observed 64-character block ID is placed in the payload's <code>hash</code> field.</p></article>
-      <article class="card"><p class="kicker">3</p><h3>Reveal comes later</h3><p>Funding and reveal happen afterward; they do not replace the saved mint hash.</p></article>
-    </div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Review it</p><h2>One value, shown in two places.</h2></div><p>Before payment, compare the order's block hash with the <code>hash</code> inside the displayed mint payload. They should be exactly the same lowercase text.</p></div><article class="code-card"><header><strong>Mint payload shape</strong><span>Example only</span></header><pre><code>{
-  "p": "block-20",
-  "op": "mint",
-  "tick": "BLK",
-  "amt": "1000",
-  "hash": "&lt;64-character-bitcoin-block-hash&gt;"
-}</code></pre></article><div class="callout danger" style="margin-top:16px"><strong>Do not edit a mint hash.</strong> Changing the hash changes the inscription. If the value is missing, malformed, surprising, or does not match the order details, do not pay. Create a fresh order.</div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">After reveal</p><h2>Verify the inscription you received.</h2></div><p>Open the reveal transaction, inspect the inscription payload, and compare its <code>hash</code>, ticker, and amount with the order you saved. A compatible reader may also apply its own rules about block history and token state.</p></div><div class="callout warn"><strong>A block hash is not a promise of mint success.</strong> It records what was observed when the order was created. The compatible reader you choose determines how that inscription affects BLOCK-20 state.</div></div></section>
-  </main><footer class="site-footer"><div class="wrap"><p>See every BLOCK-20 field in <a href="reference.html">the inscription guide</a>, or begin with the <a href="guide.html">safe start</a>.</p></div></footer>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 mint anchor: verifier and derivation walkthrough</title>
+<meta name="description" content="What the hash field in a BLOCK-20 mint means, where the writer gets it, how a reader validates it, and a client-side verifier that walks the derivation step by step.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/mint-hash.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 mint anchor verifier">
+<meta property="og:description" content="Recompute the BLOCK-20 mint anchor derivation in your browser and see exactly which rule a candidate mint passes or fails.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/mint-hash.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html">Specification</a>
+      <a href="guide.html">Guide</a>
+      <a href="reference.html">Reference</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="mint-hash.html" aria-current="page">Mint anchor</a>
+      <a href="vectors.html">Test vectors</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">The proof in a mint</p>
+      <h1>The mint anchor</h1>
+      <p class="lead">Every BLOCK-20 mint carries a <code>hash</code>: the 64 character ID of a Bitcoin block. The writer picks it. The reader tests it. If the test fails, the mint credits nothing, no matter how well formed the rest of the payload is.</p>
+      <div class="actions"><a class="button" href="#verifier">Open the verifier</a><a class="button secondary" href="spec.html#mint">Read rules R6.1 to R6.12</a></div>
+    </div>
+    <div>
+      <p class="height-display">144</p>
+      <p class="height-label">Default freshness window, in blocks, between the anchor and the reveal</p>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Where it comes from</p>
+      <h2 id="origin">The writer captures a tip, once</h2>
+    </div>
+    <p>When Bitcoin Universe Inscribe creates a mint order, it reads the current chain tip from its configured block source and writes that block ID into two places: the order's <code>blockHash</code> field and the payload's <code>hash</code> field. The value is chosen before funding, before payment detection, before reveal, and before any confirmation. The writer does not refresh it later, and the caller cannot supply it through the order API.</p>
+    <div class="chain-strip">
+      <div class="blk"><span class="h">1</span><span class="t">Order created. Writer reads the tip and embeds its hash.</span></div>
+      <div class="blk"><span class="h">2</span><span class="t">You review the payload and fund the commit output.</span></div>
+      <div class="blk"><span class="h">3</span><span class="t">Reveal is broadcast and mined. The anchor is unchanged.</span></div>
+      <div class="blk anchor"><span class="h">4</span><span class="t">A reader tests the anchor against the chain and decides.</span></div>
+    </div>
+    <p>Because the tip is always mined before the later reveal block, an ordinary order satisfies the ordering rule naturally. The rule that ordinary orders actually fail is freshness: if an order sits unfunded, or the reveal is delayed, the captured tip can drift more than 144 blocks behind the block that finally reveals the mint. At that point the mint is inscribed on Bitcoin and credits nothing.</p>
+    <div class="callout bad">
+      <p><strong>The anchor is not what most people assume.</strong> It is not the block that confirms the reveal, not a transaction ID, not <code>txid:vout</code>, not an inscription ID, not a numeric height, not a Merkle root, not a payload digest, and not the previous block hash. It is the block ID of a block the writer observed as the tip while building the order.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">What a reader does</p>
+      <h2 id="derivation">The derivation, in order</h2>
+      <p>The reader evaluates these steps in sequence and stops at the first failure. Nothing is partially credited on failure.</p>
+    </div>
+    <div class="code-card">
+      <header><strong>Anchor derivation</strong><span>H = hash, R = reveal height, D = deploy height, W = window</span></header>
+      <pre><code>1  H matches ^[0-9a-f]{64}$                          R6.4
+2  A := height of the block whose ID is H,
+      resolved against the active chain               R6.5
+3  A &gt;= D    anchor at or after deployment            R6.6
+4  A &lt;  R    anchor strictly before the reveal        R6.7
+5  R - A &lt;= W   anchor inside the freshness window    R6.8
+6  remaining := max - minted; if &lt;= 0 the mint is
+      ignored and produces no event                   R6.9
+7  credited := min(amt, remaining)                    R6.10</code></pre>
+    </div>
+    <div class="grid three">
+      <article class="card accent">
+        <h3>Step 2 is the one that needs a node</h3>
+        <p>Resolution succeeds only when a Bitcoin node knows the header, the header has at least one confirmation, and the block currently at that height hashes to the same value. An orphaned block fails the third condition even though the header exists.</p>
+      </article>
+      <article class="card accent">
+        <h3>Boundaries are exact</h3>
+        <p><code>A = D</code> is valid. <code>A = R</code> is not. <code>R - A = 144</code> is valid at the default window. <code>R - A = 145</code> is not.</p>
+      </article>
+      <article class="card accent">
+        <h3>The window is a reader setting</h3>
+        <p>144 blocks is the reference default. An operator may configure any value from 1 to 10000, so a mint near the boundary can be accepted by one reader and rejected by another. Treat the boundary as a risk zone, not a guarantee.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="verifier">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Tool</p>
+      <h2 id="verifier-h">Mint anchor verifier</h2>
+      <p>Paste the exact inscription content and the block data around it. The tool reproduces the payload grammar and the whole anchor derivation in your browser and explains each step. Reader profile <code>bitcoin-universe-block20-v1</code>, Bitcoin mainnet rules.</p>
+    </div>
+
+    <div class="callout">
+      <p><strong>What this tool cannot do, and why.</strong> Step 2 of the derivation asks a Bitcoin node whether a hash names a block on the active chain and at what height. This page makes no network requests of any kind, so it cannot answer that. Look the hash up in any block explorer and enter the height it reports. Leave the height blank if no block with that ID exists, and the tool will treat the anchor as unresolved, which is what a reader does.</p>
+      <p class="small muted">Nothing you type is transmitted, stored, or logged. All computation happens in this page.</p>
+    </div>
+
+    <noscript>
+      <div class="callout bad">
+        <p><strong>The verifier needs JavaScript.</strong> Without it you can still apply the derivation by hand: check the hash against <code>^[0-9a-f]{64}$</code>, look up its height <code>A</code> in a block explorer, then confirm <code>A &gt;= D</code>, <code>A &lt; R</code>, and <code>R - A &lt;= 144</code>. Every rule is written out in the <a href="spec.html#mint">specification</a>.</p>
+      </div>
+    </noscript>
+
+    <p id="no-js-note" class="callout warn">Enable JavaScript to use the verifier. The derivation is fully written out above and in the <a href="spec.html#anchor-derivation">specification</a>, so nothing here is hidden behind the tool.</p>
+
+    <div class="tool" data-js-tool hidden>
+      <form id="verify-form" novalidate>
+        <div class="field">
+          <label for="payload">Inscription content</label>
+          <span class="hint">The exact bytes of the inscription, as text. Grammar is strict: all values must be JSON strings, no duplicate keys, no trailing content.</span>
+          <textarea id="payload" name="payload" spellcheck="false" autocomplete="off">{"p":"block-20","op":"mint","tick":"BLK","amt":"1000","hash":"000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5"}</textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="anchor-height">Anchor block height (A)</label>
+            <span class="hint">Height a node reports for the hash. Blank means unresolved.</span>
+            <input id="anchor-height" name="anchor-height" inputmode="numeric" autocomplete="off" value="767430">
+          </div>
+          <div class="field">
+            <label for="reveal-height">Reveal block height (R)</label>
+            <span class="hint">Block containing the mint inscription.</span>
+            <input id="reveal-height" name="reveal-height" inputmode="numeric" autocomplete="off" value="767500">
+          </div>
+          <div class="field">
+            <label for="deploy-height">Deploy block height (D)</label>
+            <span class="hint">Block that deployed the ticker.</span>
+            <input id="deploy-height" name="deploy-height" inputmode="numeric" autocomplete="off" value="767430">
+          </div>
+          <div class="field">
+            <label for="window">Freshness window (W)</label>
+            <span class="hint">Reader setting. Default 144.</span>
+            <input id="window" name="window" inputmode="numeric" autocomplete="off" value="144">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="mint-limit">Deployment lim</label>
+            <span class="hint">Maximum per mint. Optional.</span>
+            <input id="mint-limit" name="mint-limit" inputmode="numeric" autocomplete="off" value="1000">
+          </div>
+          <div class="field">
+            <label for="max-supply">Deployment max</label>
+            <span class="hint">Maximum supply. Optional.</span>
+            <input id="max-supply" name="max-supply" inputmode="numeric" autocomplete="off" value="21000000">
+          </div>
+          <div class="field">
+            <label for="minted-supply">Already minted</label>
+            <span class="hint">Minted supply before this mint. Optional.</span>
+            <input id="minted-supply" name="minted-supply" inputmode="numeric" autocomplete="off" value="0">
+          </div>
+        </div>
+        <div class="actions" style="margin-top:4px">
+          <button class="button" type="submit">Verify this mint</button>
+          <button class="button secondary" type="button" id="verify-reset">Clear result</button>
+        </div>
+      </form>
+
+      <div id="verify-output" hidden>
+        <h3 style="margin-top:22px">Derivation</h3>
+        <ul class="steps" id="verify-steps"></ul>
+        <p class="verdict" id="verify-verdict" role="status"></p>
+      </div>
+    </div>
+
+    <h3 id="samples" style="margin-top:26px">Load a worked case</h3>
+    <p class="small muted">These use the real Bitcoin mainnet block <span class="hash">000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5</span> at height 767430 as the anchor, so the height you would find in an explorer is the height shown. Ticker, supply, and reveal heights are illustrative.</p>
+    <div class="actions">
+      <button class="button secondary" type="button" hidden data-sample='{"payload":"{\"p\":\"block-20\",\"op\":\"mint\",\"tick\":\"BLK\",\"amt\":\"1000\",\"hash\":\"000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5\"}","deploy":767430,"anchor":767430,"reveal":767500,"window":144,"lim":1000,"max":21000000,"minted":0}'>Valid mint at the A equals D boundary</button>
+      <button class="button secondary" type="button" hidden data-sample='{"payload":"{\"p\":\"block-20\",\"op\":\"mint\",\"tick\":\"BLK\",\"amt\":\"1000\",\"hash\":\"000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5\"}","deploy":767430,"anchor":767430,"reveal":767600,"window":144,"lim":1000,"max":21000000,"minted":0}'>Stale anchor, 170 blocks old</button>
+      <button class="button secondary" type="button" hidden data-sample='{"payload":"{\"p\":\"block-20\",\"op\":\"mint\",\"tick\":\"BLK\",\"amt\":\"1000\",\"hash\":\"000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5\"}","deploy":767430,"anchor":767430,"reveal":767500,"window":144,"lim":1000,"max":21000000,"minted":20999500}'>Partial final mint, 500 credited</button>
+      <button class="button secondary" type="button" hidden data-sample='{"payload":"{\"p\":\"block-20\",\"op\":\"mint\",\"tick\":\"BLK\",\"amt\":\"1000\",\"hash\":\"000000000000000000029730547464F056F8B6E2E0A02EAF69C24389983A04F5\"}","deploy":767430,"anchor":767430,"reveal":767500,"window":144,"lim":1000,"max":21000000,"minted":0}'>Uppercase hash, rejected by R6.4</button>
+      <button class="button secondary" type="button" hidden data-sample='{"payload":"{\"p\":\"block-20\",\"op\":\"mint\",\"tick\":\"BLK\",\"amt\":1000,\"hash\":\"000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5\"}","deploy":767430,"anchor":767430,"reveal":767500,"window":144,"lim":1000,"max":21000000,"minted":0}'>Numeric amount, rejected by R3.3</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Before you pay</p>
+      <h2 id="review">Reviewing an anchor in an order</h2>
+    </div>
+    <p>The order screen shows the block hash in two places: as an order field and inside the payload preview. They must be exactly the same lowercase text. If the value is missing, malformed, uppercase, surprising, or does not match between the two places, do not fund the order. Create a fresh one.</p>
+    <div class="grid two">
+      <article class="card">
+        <h3>Do not edit a mint hash</h3>
+        <p>Changing the hash changes the inscription bytes, and therefore the whole order. There is no way to correct an anchor after the reveal is mined.</p>
+      </article>
+      <article class="card">
+        <h3>A hash is not a promise</h3>
+        <p>An anchor records what the writer observed. It does not guarantee the mint will be credited. Supply may be exhausted, the amount may exceed the limit, or the freshness window may have passed by the time the reveal is mined.</p>
+      </article>
+    </div>
+    <div class="callout warn">
+      <p>After the reveal, open the transaction in a Bitcoin explorer, read the inscription content, and compare the <code>hash</code>, <code>tick</code>, and <code>amt</code> with the order you saved. Then run the values through the verifier above to see which rule decides the outcome.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>mint-hash.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/mint-hash.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+<script src="verify.js" defer></script>
+</body>
+</html>
