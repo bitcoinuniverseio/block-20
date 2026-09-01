@@ -1,17 +1,295 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Create a BLOCK-20 deploy, mint, or transfer inscription safely."><meta name="theme-color" content="#120d09"><title>Start safely with BLOCK-20</title><link rel="stylesheet" href="site.css"></head><body>
-  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html" aria-label="BLOCK-20 home"><span class="brand-mark">B20</span><span>BLOCK-20</span></a><nav aria-label="Primary navigation"><a href="index.html">Overview</a><a href="guide.html" aria-current="page">Start safely</a><a href="lifecycle.html">Your order</a><a href="reference.html">The inscription</a><a href="mint-hash.html">Mint hash</a></nav><a class="source-link" href="https://inscribe.bitcoinuniverse.io/block20" target="_blank" rel="noreferrer">Open BLOCK-20</a></div></header>
-  <main>
-    <div class="wrap hero compact"><div><p class="eyebrow">Start safely</p><h1>Create with clarity from the first click.</h1><p class="lead">BLOCK-20 shows the action, inscription, receiving address, payment amount, and reveal journey before you commit Bitcoin.</p></div><aside class="hero-panel"><dl><div><dt>Your action</dt><dd>Deploy, mint, or transfer.</dd></div><div><dt>Your receiver</dt><dd>A Bitcoin address you control.</dd></div><div><dt>Your proof</dt><dd>The final reveal transaction.</dd></div></dl></aside></div>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Choose</p><h2>Start with the right action.</h2></div><p>Each action creates a different inscription. Read the preview and make sure its meaning matches your intent.</p></div><div class="grid three">
-      <article class="card"><p class="kicker">Deploy</p><h3>Define a ticker</h3><p>Choose the ticker, maximum supply, mint limit, and optional public description. Check spelling and capitalization before creating the order.</p></article>
-      <article class="card"><p class="kicker">Mint</p><h3>Create an amount</h3><p>Choose an existing ticker and amount. The order adds the Bitcoin block reference used by the mint inscription.</p></article>
-      <article class="card"><p class="kicker">Transfer</p><h3>Prepare movement</h3><p>Choose the ticker and amount, then send the revealed inscription to the intended Bitcoin address.</p></article>
-    </div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Review</p><h2>Pause at the order screen.</h2></div><p>This is the moment to catch a mistake. Do not open your wallet until every visible detail is right.</p></div><div class="grid two">
-      <article class="card"><h3>Confirm the inscription</h3><ul class="note-list"><li>The operation matches deploy, mint, or transfer.</li><li>The ticker, amount, supply, limit, and description match your intent.</li><li>A mint includes the displayed Bitcoin block hash.</li></ul></article>
-      <article class="card"><h3>Confirm the payment</h3><ul class="note-list"><li>The receiver is a Bitcoin address you control.</li><li>The commit address and minimum amount match the open order.</li><li>The fee and payment window are acceptable to you.</li></ul></article>
-    </div><div class="callout danger" style="margin-top:16px"><strong>Never share wallet secrets.</strong> BLOCK-20 does not need your seed phrase or private key. Your wallet should only be asked to send the reviewed Bitcoin amount to the order's displayed commit address.</div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Fund</p><h2>Send one dedicated output, once.</h2></div><p>Use the exact commit address and at least the minimum amount shown. Do not split the amount into smaller payments, reuse the address for another purpose, or send a second payment because the page takes time to update.</p></div><div class="callout warn"><strong>Keep the order page and payment record.</strong> Save the order identity, inscription preview, receiver, commit address, amount, expiry, and wallet transaction ID until the reveal is complete.</div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Verify</p><h2>Follow the reveal all the way to Bitcoin.</h2></div><p>After the payment is detected, the order moves toward reveal. When a reveal transaction appears, open it in a Bitcoin explorer and compare the inscription with your saved preview. Then use a compatible BLOCK-20 reader to see the token result.</p></div><p><a class="button" href="https://inscribe.bitcoinuniverse.io/block20" target="_blank" rel="noreferrer">Open BLOCK-20 <span aria-hidden="true">→</span></a></p></div></section>
-  </main><footer class="site-footer"><div class="wrap"><p>Need to understand a status? Continue to <a href="lifecycle.html">your order journey</a>. Bitcoin payments are difficult to reverse, so review first and pay once.</p></div></footer>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 guide: worked deploy, mint, and transfer examples</title>
+<meta name="description" content="A plain-language walkthrough of BLOCK-20 with worked deploy, mint, and transfer payloads, what each one costs in bytes, what a reader does with it, and which Bitcoin Universe products support it.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/guide.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 guide">
+<meta property="og:description" content="Worked BLOCK-20 examples and a verified support matrix for Bitcoin Universe products.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/guide.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html">Specification</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a href="reference.html">Reference</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="mint-hash.html">Mint anchor</a>
+      <a href="vectors.html">Test vectors</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Walkthrough</p>
+    <h1>Using BLOCK-20 without guessing</h1>
+    <p class="lead">Three operations, one payload each, and one rule that decides whether a mint counted. This page walks each operation with the exact bytes, then covers what to check before funding and which Universe products can do what.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Mental model</p>
+      <h2 id="model">Bitcoin stores the message. A reader decides the meaning.</h2>
+    </div>
+    <p>Inscribing a BLOCK-20 payload does not create tokens. It publishes a claim. A reader replays every BLOCK-20 inscription in block order, applies the rules, and produces balances. The reader can reject your claim silently and your Bitcoin is still spent.</p>
+    <div class="grid three">
+      <article class="card"><p class="kicker">Deploy</p><h3>Defines a ticker</h3><p>Sets the identity, maximum supply, and per-mint limit. No tokens are created. The first valid deploy of a name wins forever.</p></article>
+      <article class="card"><p class="kicker">Mint</p><h3>Creates units, if proved</h3><p>Names a Bitcoin block. The reader checks that block against the chain before crediting anything.</p></article>
+      <article class="card"><p class="kicker">Transfer</p><h3>Reserves, then settles</h3><p>Inscribing reserves an amount. Moving the inscription decides where it lands.</p></article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Worked example 1</p>
+      <h2 id="deploy">Deploying a ticker</h2>
+    </div>
+    <p>Suppose you want a ticker called <code>BLK</code> with 21 million maximum supply and a 1000 unit cap per mint.</p>
+    <div class="code-card">
+      <header><strong>Inscription content</strong><span>73 bytes UTF-8</span></header>
+      <pre><code>{"p":"block-20","op":"deploy","tick":"BLK","max":"21000000","lim":"1000"}</code></pre>
+    </div>
+    <p>With an optional description:</p>
+    <div class="code-card">
+      <header><strong>With des</strong><span>108 bytes UTF-8</span></header>
+      <pre><code>{"p":"block-20","op":"deploy","tick":"BLK","max":"21000000","lim":"1000","des":"Anchored supply experiment"}</code></pre>
+    </div>
+    <h3 id="deploy-outcome">What the reader does</h3>
+    <ol>
+      <li>Confirms the content type and size, then parses the strict grammar. All five required fields are present, all values are strings, nothing repeats.</li>
+      <li>Normalizes <code>BLK</code> to the identity <code>blk</code>. If <code>blk</code>, <code>Blk</code>, or <code>BLK</code> was already deployed, this inscription is ignored.</li>
+      <li>Checks that <code>lim</code> (1000) does not exceed <code>max</code> (21000000).</li>
+      <li>Records the deploy height as the block containing this inscription, and the deployer as the reveal owner.</li>
+      <li>Creates the ticker with total, circulating, minted, and burned supply all at zero.</li>
+    </ol>
+    <div class="callout warn">
+      <p>Casing is preserved for display but not for identity. Deploying <code>BLK</code> means nobody can later deploy <code>blk</code>. Choose the casing you want shown, because it is fixed at deploy and immutable afterward.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Worked example 2</p>
+      <h2 id="mint">Minting with an anchor</h2>
+    </div>
+    <p>Say <code>BLK</code> deployed at height 767430, nothing has been minted yet, and you want 1000 units. The writer reads the current tip while creating your order. In this example the tip is block 767430, whose ID is the value below.</p>
+    <div class="code-card">
+      <header><strong>Inscription content</strong><span>128 bytes UTF-8</span></header>
+      <pre><code>{"p":"block-20","op":"mint","tick":"BLK","amt":"1000","hash":"000000000000000000029730547464f056f8b6e2e0a02eaf69c24389983a04f5"}</code></pre>
+    </div>
+    <p>Your reveal is mined at height 767500.</p>
+    <div class="chain-strip">
+      <div class="blk anchor"><span class="h">767430</span><span class="t">deploy and anchor block (A = D)</span></div>
+      <div class="blk"><span class="h">+70</span><span class="t">blocks pass while the order is funded</span></div>
+      <div class="blk"><span class="h">767500</span><span class="t">reveal block (R)</span></div>
+    </div>
+    <h3 id="mint-outcome">What the reader does</h3>
+    <ol>
+      <li>Parses the payload and checks the exact field set for a mint: <code>p</code>, <code>op</code>, <code>tick</code>, <code>amt</code>, <code>hash</code>.</li>
+      <li>Finds an active deployment for <code>blk</code>.</li>
+      <li>Confirms <code>amt</code> (1000) does not exceed <code>lim</code> (1000). Equal is allowed.</li>
+      <li>Confirms the hash is 64 lowercase hex characters.</li>
+      <li>Asks a Bitcoin node for the height of that block ID and gets 767430, on the active chain.</li>
+      <li>Checks 767430 &gt;= 767430 (deploy bound, satisfied at the boundary), 767430 &lt; 767500 (before the reveal), and 767500 minus 767430 = 70, which is inside the 144 block window.</li>
+      <li>Remaining supply is 21000000, so the full 1000 is credited to your reveal address.</li>
+    </ol>
+    <p>Run these exact numbers through the <a href="mint-hash.html#verifier">anchor verifier</a> to see each step evaluated.</p>
+    <div class="callout bad">
+      <p><strong>The failure mode to watch.</strong> If the same order sits unfunded and the reveal lands at height 767600 instead, the anchor is 170 blocks old, the freshness rule fails, and the mint credits nothing. The inscription still exists on Bitcoin, and the fees are still spent.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Worked example 3</p>
+      <h2 id="transfer">Transferring a balance</h2>
+    </div>
+    <p>You hold 1000 <code>BLK</code> and want to send 250 to someone. This takes two chain events.</p>
+    <div class="code-card">
+      <header><strong>Step 1: inscribe the transfer</strong><span>57 bytes UTF-8</span></header>
+      <pre><code>{"p":"block-20","op":"transfer","tick":"BLK","amt":"250"}</code></pre>
+    </div>
+    <p>Revealing this inscription creates a reservation. Your balance still reads 1000. Your <em>available</em> balance drops to 750, because 250 is now committed to that inscription.</p>
+    <div class="code-card">
+      <header><strong>Step 2: move the inscription</strong><span>an ordinary Bitcoin transaction</span></header>
+      <pre><code>send the transfer inscription to the recipient's address</code></pre>
+    </div>
+    <p>The first move settles the reservation. Three outcomes are possible:</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Settlement outcomes for a transfer inscription holding 250 units.</caption>
+        <thead><tr><th scope="col">What happens to the inscription</th><th scope="col">Your balance</th><th scope="col">Recipient</th><th scope="col">Supply</th></tr></thead>
+        <tbody>
+          <tr><td>Sent to a supported address</td><td>1000 becomes 750</td><td>+250</td><td>unchanged</td></tr>
+          <tr><td>Sent back to your own address</td><td>1000, reservation released</td><td>none</td><td>unchanged</td></tr>
+          <tr><td>Spent in transaction fees</td><td>1000, reservation released</td><td>none</td><td>unchanged</td></tr>
+          <tr><td>Burnt or sent somewhere unreadable</td><td>1000 becomes 750</td><td>none</td><td>total and circulating fall by 250, burned rises by 250</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn">
+      <p>A transfer inscription is single use. After it settles, moving it again does nothing to any balance. If you want to send another 250, inscribe another transfer.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Before you fund</p>
+      <h2 id="checklist">The review that actually prevents losses</h2>
+      <p>Order creation puts nothing on Bitcoin. The payment starts the commit and reveal sequence, and after that nothing is reversible. This is the moment to catch a mistake.</p>
+    </div>
+    <div class="grid two">
+      <article class="card">
+        <h3>Confirm the inscription</h3>
+        <ul class="note-list">
+          <li>The operation is the one you intended.</li>
+          <li>The ticker spelling and capitalization match exactly.</li>
+          <li>Amounts, maximum supply, limit, and description match your intent.</li>
+          <li>A mint shows a 64 character lowercase block hash, identical in the order field and in the payload preview.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Confirm the payment</h3>
+        <ul class="note-list">
+          <li>The receiving address is a Bitcoin address you control. An empty receiver falls back to a server-generated address.</li>
+          <li>The commit address and minimum amount match the open order.</li>
+          <li>The fee rate and payment window are acceptable to you.</li>
+        </ul>
+      </article>
+    </div>
+    <div class="callout bad">
+      <p><strong>Never share wallet secrets.</strong> BLOCK-20 never needs a seed phrase or a private key. Your wallet should only be asked to send the reviewed Bitcoin amount to the order's commit address.</p>
+    </div>
+    <h3 id="funding">Funding rules that are not optional</h3>
+    <ul>
+      <li>Send <strong>one</strong> dedicated output at or above the displayed minimum. Several smaller outputs are not combined.</li>
+      <li>Do not reuse a commit address for anything else, and do not pay an expired order's address.</li>
+      <li>Do not pay twice because a status is slow to update. Check your wallet transaction first.</li>
+      <li>Keep the order identity, payload preview, receiver, commit address, amount, expiry, and your wallet transaction ID until the reveal appears.</li>
+    </ul>
+    <p>The <a href="lifecycle.html">lifecycle page</a> explains each order status and what to do about it.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">After the reveal</p>
+      <h2 id="verify">Checking that it counted</h2>
+    </div>
+    <ol>
+      <li>Open the reveal transaction in a Bitcoin explorer and read the inscription content.</li>
+      <li>Compare it byte for byte with the payload preview you saved.</li>
+      <li>For a mint, note the reveal block height, look up the anchor hash to get its height, and run both through the <a href="mint-hash.html#verifier">verifier</a>.</li>
+      <li>Check the balance in a BLOCK-20 reader. Remember that a reader waits for confirmations and can revise recent history after a reorganization.</li>
+    </ol>
+    <div class="callout">
+      <p>An inscription that exists on Bitcoin is not the same as a balance that exists in a reader. The <a href="vectors.html">test vectors</a> show a range of inscriptions that are perfectly valid Bitcoin transactions and still credit nothing.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Product support</p>
+      <h2 id="support">What supports BLOCK-20 today</h2>
+      <p>This table lists only what is recorded in the Bitcoin Universe capability registry. Support that is not listed does not exist, and this page does not speculate about third-party wallets or marketplaces.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>BLOCK-20 support across Bitcoin Universe surfaces.</caption>
+        <thead><tr><th scope="col">Product surface</th><th scope="col">Can do</th><th scope="col">Cannot do</th></tr></thead>
+        <tbody>
+          <tr>
+            <th scope="row">Core explorer</th>
+            <td>View tokens, discover, view collections, view activity, view transactions</td>
+            <td>Any write or trade action</td>
+          </tr>
+          <tr>
+            <th scope="row">Wallet</th>
+            <td>View balances, send, receive</td>
+            <td>List, buy, sell, offer</td>
+          </tr>
+          <tr>
+            <th scope="row">Inscribe</th>
+            <td>Build and broadcast deploy, mint, and transfer inscriptions</td>
+            <td>Validate token rules; it emits payloads without checking supply, limits, or ticker existence</td>
+          </tr>
+          <tr>
+            <th scope="row">Marketplace</th>
+            <td>Nothing</td>
+            <td>Everything: there is no BLOCK-20 marketplace entry at all</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout bad">
+      <p><strong>BLOCK-20 is indexed, not tradeable.</strong> No Bitcoin Universe product implements listing, buying, offers, acceptance, or settlement for BLOCK-20. If you acquire a balance, the supported ways to move it are a wallet send or a transfer inscription. There is no in-house market, and this documentation makes no claim about markets elsewhere.</p>
+    </div>
+    <div class="callout warn">
+      <p><strong>Third-party readers may disagree.</strong> Everything on this site describes the <code>bitcoin-universe-block20-v1</code> profile. Another indexer that does not check the anchor against the active chain will show different balances for the same inscriptions. Ask any service you rely on which profile it implements.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>guide.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/guide.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>

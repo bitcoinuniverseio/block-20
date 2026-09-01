@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 documentation changelog</title>
+<meta name="description" content="Version history for the BLOCK-20 specification and documentation site, including what changed, what was corrected, and the compatibility impact of each version.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/changelog.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 documentation changelog">
+<meta property="og:description" content="Version history for the BLOCK-20 specification and documentation site.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/changelog.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html">Specification</a>
+      <a href="guide.html">Guide</a>
+      <a href="reference.html">Reference</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="mint-hash.html">Mint anchor</a>
+      <a href="vectors.html">Test vectors</a>
+      <a href="changelog.html" aria-current="page">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">History</p>
+    <h1>Documentation changelog</h1>
+    <p class="lead">Versions of this documentation set. A BLOCK-20 payload carries no version field, so any change to field names, defaults, serialization, or the anchor rule is compatibility sensitive and is recorded here in full.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2 id="v2-0-0">2.0.0 <span class="tag amber">current</span></h2>
+    <p class="muted small"><time datetime="2026-09-01">2026-09-01</time></p>
+    <p>Rebuilt as a complete protocol documentation site. The previous version described the ordering experience only; this version specifies the protocol itself, including the reader rules that decide validity.</p>
+
+    <h3>Added</h3>
+    <ul>
+      <li>A normative <a href="spec.html">specification</a> with stable numbered rules covering the carrier and envelope, the strict payload grammar, identity and number rules, deploy, mint, transfer, ordering, invalidity conditions, reorganization, and conformance.</li>
+      <li>The full <a href="mint-hash.html#derivation">mint anchor derivation</a> as a seven step sequence, with the active-chain resolution, deploy bound, reveal bound, and freshness window stated as separate rules.</li>
+      <li>A client-side <a href="mint-hash.html#verifier">mint anchor verifier</a> that reproduces the payload grammar and the whole derivation in the browser, explains each step, and states plainly which input it cannot obtain without chain data.</li>
+      <li>A <a href="vectors.html">test vector page</a> with valid and invalid cases across grammar, anchor boundaries, supply, transfer settlement, within-block ordering, and reorganization.</li>
+      <li>Indexer semantics in the <a href="reference.html#indexer">reference</a>: confirmation counting, finality depth, coverage reporting, mempool limitations, and reorganization handling.</li>
+      <li>An <a href="reference.html#checklist">implementation checklist</a>, <a href="reference.html#security">security considerations</a>, and an explicit <a href="reference.html#limits">limitations</a> list.</li>
+      <li>The reader event lifecycle alongside the existing order lifecycle.</li>
+      <li>Client-side search, a theme toggle, <code>llms.txt</code>, <code>sitemap.xml</code>, <code>robots.txt</code>, and a helpful 404 page.</li>
+    </ul>
+
+    <h3>Corrected</h3>
+    <ul>
+      <li>The site previously described the mint hash only as a captured tip value. It is that, but the writer's choice is not what makes a mint valid. Validity is decided by the reader resolving the hash against the active chain and checking three distances. That distinction is now the centre of the documentation.</li>
+      <li>Stated plainly that <strong>no Bitcoin Universe marketplace path exists for BLOCK-20</strong>. The capability registry records no marketplace entry for this protocol at all. Previous pages did not say this either way, which left room to assume a market existed.</li>
+      <li>Replaced product-led framing with protocol facts. Support claims are now limited to surfaces recorded in the capability registry: discovery in Core, view, send, and receive in the Wallet, and deploy, mint, and transfer in Inscribe.</li>
+      <li>Documented that the writer performs no token validation. It will inscribe a mint above the limit or for a ticker that does not exist, and the Bitcoin fees are spent regardless.</li>
+      <li>Documented that ticker identity is case-insensitive and that the first valid deploy wins permanently.</li>
+      <li>Documented zero decimals, the 2048 byte content ceiling, the 2<sup>128</sup> minus 1 amount ceiling, and the strict rejection of duplicate keys, non-string values, and trailing content.</li>
+      <li>Documented partial final mints and that a mint after supply exhaustion produces no event rather than a failed one.</li>
+      <li>Documented that burning reduces total and circulating supply but never reduces minted supply, so burnt capacity is not reopened.</li>
+      <li>Documented that order expiry is monitor behavior rather than a hard gate, and that a late reveal can therefore still fail the freshness rule.</li>
+    </ul>
+
+    <h3>Compatibility impact</h3>
+    <p>None to the wire format. Nothing in this version changes what a writer emits or what a reader accepts. It documents behavior that already existed.</p>
+
+    <h2 id="v1-0-0" style="margin-top:40px">1.0.0</h2>
+    <p class="muted small">Superseded</p>
+    <p>The first public BLOCK-20 site. It covered the ordering experience: choosing an action, reviewing the payload before payment, funding one dedicated output, following the order statuses, and the meaning of the fields in each payload. Its factual content about the order lifecycle, the payload field names, payment safety, and the origin of the mint hash is preserved in this version, on the <a href="lifecycle.html">lifecycle</a>, <a href="guide.html">guide</a>, and <a href="mint-hash.html">mint anchor</a> pages.</p>
+    <p>It did not state the reader rules, so it could not explain why a well formed mint might credit nothing.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Change policy</p>
+      <h2 id="policy">What a future version must do</h2>
+    </div>
+    <p>Because emitted payloads carry no profile version, a change to field names, default values, serialization, the anchor rule, receiver behavior, or lifecycle semantics must update all of the following together:</p>
+    <ol>
+      <li>the <a href="spec.html">specification</a>, keeping existing rule identifiers stable and adding new ones rather than renumbering;</li>
+      <li>every affected page and <code>llms.txt</code>;</li>
+      <li>the <a href="vectors.html">test vectors</a>, including a vector for the changed behavior;</li>
+      <li>this changelog, with the compatibility impact stated explicitly;</li>
+      <li><code>docs.manifest.json</code>, including <code>lastVerified</code>.</li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>changelog.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/changelog.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>

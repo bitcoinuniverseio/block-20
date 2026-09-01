@@ -1,0 +1,82 @@
+# BLOCK-20
+
+> BLOCK-20 is an inscription-carried token protocol on Bitcoin. Deploy, mint, and transfer
+> operations are compact UTF-8 JSON payloads inside Ordinals inscriptions. What distinguishes
+> BLOCK-20 from other inscription token protocols is that every mint carries the hash of a
+> Bitcoin block, and a reader credits the mint only when that block is on the active chain,
+> at or after the ticker's deploy height, strictly before the mint's own reveal height, and
+> no more than a freshness window (144 blocks by default) before the reveal.
+
+Site: https://bitcoinuniverseio.github.io/block-20/
+Repository: https://github.com/bitcoinuniverseio/block-20
+Chain and network: Bitcoin, mainnet (testnet configurable in readers)
+Protocol marker: block-20
+Operations: deploy, mint, transfer
+Decimals: 0
+Document version: 2.0.0
+Reader profile documented: bitcoin-universe-block20-v1
+Lifecycle: experimental
+Last verified: 2026-09-01
+
+## Key facts
+
+- Payload grammar is a strict flat JSON object: every key and value must be a JSON string.
+  Duplicate keys, non-string values, nested structures, and trailing content are rejected.
+- Inscription content must be 1 to 2048 bytes and carry content type text/plain or application/json.
+- Ticker is one to five ASCII alphanumerics; identity is the lowercase form; the first valid deploy wins.
+- Amounts are strings matching ^[1-9][0-9]*$ and must not exceed 2^128 minus 1.
+- Mint anchor derivation: hash must match ^[0-9a-f]{64}$, resolve to a height A on the active chain,
+  and satisfy A >= deploy height, A < reveal height, and reveal height minus A <= window.
+- A mint after supply exhaustion produces no event. A mint larger than remaining supply is credited
+  for exactly the remaining amount (partial final mint).
+- A transfer inscription reserves an amount; its first later move settles it as a transfer, a fee
+  return, or a burn. Burning reduces total and circulating supply but never reduces minted supply.
+- Bitcoin Universe product support: Core explorer discovery, Wallet view/send/receive, Inscribe
+  deploy/mint/transfer. There is NO marketplace entry for BLOCK-20 in the organization's capability
+  registry, so no Universe product implements listing, buying, offers, or settlement. BLOCK-20 is
+  indexed but not tradeable inside Bitcoin Universe.
+- The writer performs no token validation. It will inscribe a mint above the limit or for a ticker
+  that does not exist, and the Bitcoin fees are spent regardless.
+
+## Pages
+
+- [Overview](https://bitcoinuniverseio.github.io/block-20/): what BLOCK-20 is, the mint anchor rule
+  in one diagram, audiences, verified product support, writer and reader split, attribution.
+- [Specification](https://bitcoinuniverseio.github.io/block-20/spec.html): normative numbered rules.
+  Sections: scope, carrier and envelope (R2.x), payload grammar (R3.x), identity and numbers (R4.x),
+  deploy (R5.x), mint and the anchor derivation (R6.x), transfer (R7.x), ordering and state (R8.x),
+  invalidity conditions, reorganization and finality (R10.x), conformance.
+- [Guide](https://bitcoinuniverseio.github.io/block-20/guide.html): plain-language walkthrough with
+  worked deploy, mint, and transfer examples including exact byte sizes, a pre-funding review
+  checklist, post-reveal verification, and the product support matrix.
+- [Reference](https://bitcoinuniverseio.github.io/block-20/reference.html): terminology, indexer
+  semantics (confirmation, mempool, reorganization), state model and supply invariants, fees and
+  size, the absence of any marketplace path, limitations, security considerations, and an
+  implementation checklist.
+- [Lifecycle](https://bitcoinuniverseio.github.io/block-20/lifecycle.html): the writer's commit and
+  reveal order stages with statuses and payment safety, and the reader's event states from confirmed
+  through finalized or reverted.
+- [Mint anchor](https://bitcoinuniverseio.github.io/block-20/mint-hash.html): where the writer gets
+  the hash, the seven step derivation, and a client-side verifier that reproduces the payload grammar
+  and the derivation in the browser. The verifier needs a user-supplied anchor block height because
+  the page makes no network requests.
+- [Test vectors](https://bitcoinuniverseio.github.io/block-20/vectors.html): valid and invalid cases
+  across payload grammar (group G), anchor boundaries (group A), limit and supply (group S), transfer
+  settlement (group T), within-block ordering (group O), and reorganization (group X).
+- [Changelog](https://bitcoinuniverseio.github.io/block-20/changelog.html): document version history
+  and the change policy for a protocol with no payload version field.
+
+## Machine-readable
+
+- [docs.manifest.json](https://bitcoinuniverseio.github.io/block-20/docs.manifest.json)
+- [search-index.json](https://bitcoinuniverseio.github.io/block-20/search-index.json)
+- [sitemap.xml](https://bitcoinuniverseio.github.io/block-20/sitemap.xml)
+
+## Notes for summarizers
+
+Do not describe BLOCK-20 as tradeable on a Bitcoin Universe marketplace; no such path exists.
+Do not describe the mint hash as the block that confirms the reveal, a transaction ID, an inscription
+ID, a height, a Merkle root, or a payload digest. It is the ID of a block the writer observed as the
+chain tip while building the order, and its validity is decided by the reader against the active chain.
+All rules on this site describe the bitcoin-universe-block20-v1 reader profile, not a Bitcoin
+consensus rule; another reader may reach a different conclusion about the same inscription.

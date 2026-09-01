@@ -1,39 +1,300 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="See the compact JSON carried by BLOCK-20 deploy, mint, and transfer inscriptions."><meta name="theme-color" content="#120d09"><title>What BLOCK-20 inscribes</title><link rel="stylesheet" href="site.css"></head><body>
-  <header class="site-header"><div class="nav-wrap"><a class="brand" href="index.html" aria-label="BLOCK-20 home"><span class="brand-mark">B20</span><span>BLOCK-20</span></a><nav aria-label="Primary navigation"><a href="index.html">Overview</a><a href="guide.html">Start safely</a><a href="lifecycle.html">Your order</a><a href="reference.html" aria-current="page">The inscription</a><a href="mint-hash.html">Mint hash</a></nav><a class="source-link" href="https://inscribe.bitcoinuniverse.io/block20" target="_blank" rel="noreferrer">Open BLOCK-20</a></div></header>
-  <main>
-    <div class="wrap hero compact"><div><p class="eyebrow">The inscription</p><h1>Small payloads with a clear purpose.</h1><p class="lead">BLOCK-20 writes compact UTF-8 JSON inside a Bitcoin inscription. The operation tells a compatible reader whether the message defines a ticker, mints an amount, or prepares a transfer.</p></div><aside class="hero-panel"><dl><div><dt>Protocol marker</dt><dd><code>block-20</code></dd></div><div><dt>Actions</dt><dd>Deploy, mint, transfer</dd></div><div><dt>Carrier</dt><dd>Bitcoin inscription</dd></div></dl></aside></div>
-    <section><div class="wrap"><div class="callout warn"><strong>Reader choice matters.</strong> Bitcoin proves the inscription bytes and transaction history. A compatible BLOCK-20 reader interprets token validity, balances, ordering, and state. Check the reader you trust before relying on an outcome.</div><div class="section-intro" style="margin-top:34px"><div><p class="eyebrow">Three actions</p><h2>Read the preview before payment.</h2></div><p>The order page shows the exact compact payload. The examples below explain the fields without representing a real ticker or transaction.</p></div><div class="grid three">
-      <article class="code-card"><header><strong>Deploy</strong><span>Defines a ticker</span></header><pre><code>{
-  "p": "block-20",
-  "op": "deploy",
-  "tick": "BLK",
-  "max": "21000000",
-  "lim": "1000",
-  "des": "Optional description"
-}</code></pre></article>
-      <article class="code-card"><header><strong>Mint</strong><span>Creates an amount</span></header><pre><code>{
-  "p": "block-20",
-  "op": "mint",
-  "tick": "BLK",
-  "amt": "1000",
-  "hash": "&lt;bitcoin-block-hash&gt;"
-}</code></pre></article>
-      <article class="code-card"><header><strong>Transfer</strong><span>Prepares movement</span></header><pre><code>{
-  "p": "block-20",
-  "op": "transfer",
-  "tick": "BLK",
-  "amt": "250"
-}</code></pre></article>
-    </div></div></section>
-    <section><div class="wrap"><div class="section-intro"><div><p class="eyebrow">Field guide</p><h2>What each short name means.</h2></div><p>Compact names keep the inscription small. Their values remain readable in your order preview.</p></div><div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th><th>Where it appears</th></tr></thead><tbody>
-      <tr><td><code>p</code></td><td>The BLOCK-20 protocol marker.</td><td>Every action</td></tr>
-      <tr><td><code>op</code></td><td>The action: deploy, mint, or transfer.</td><td>Every action</td></tr>
-      <tr><td><code>tick</code></td><td>The ticker exactly as shown in the order.</td><td>Every action</td></tr>
-      <tr><td><code>max</code></td><td>The intended maximum supply.</td><td>Deploy</td></tr>
-      <tr><td><code>lim</code></td><td>The intended amount allowed per mint.</td><td>Deploy</td></tr>
-      <tr><td><code>des</code></td><td>An optional public description.</td><td>Deploy</td></tr>
-      <tr><td><code>amt</code></td><td>The amount represented as text.</td><td>Mint and transfer</td></tr>
-      <tr><td><code>hash</code></td><td>The Bitcoin block reference captured when a mint order is created.</td><td>Mint</td></tr>
-    </tbody></table></div><div class="callout danger" style="margin-top:16px"><strong>Exact values matter.</strong> Ticker spelling, capitalization, amounts, supply, limits, descriptions, and the mint hash become part of the inscription. If anything is wrong before payment, discard the order and create a fresh one.</div></div></section>
-  </main><footer class="site-footer"><div class="wrap"><p>For the story behind a mint's block reference, continue to <a href="mint-hash.html">the mint hash</a>.</p></div></footer>
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLOCK-20 reference: terminology, indexer semantics, and limitations</title>
+<meta name="description" content="BLOCK-20 terminology, indexer confirmation and reorganization behavior, mempool coverage, fee and size considerations, security considerations, known limitations, and an implementation checklist.">
+<meta name="theme-color" content="#0e1218">
+<link rel="canonical" href="https://bitcoinuniverseio.github.io/block-20/reference.html">
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BLOCK-20 protocol documentation">
+<meta property="og:title" content="BLOCK-20 reference">
+<meta property="og:description" content="Indexer semantics, fees, limitations, security considerations, and an implementation checklist for BLOCK-20.">
+<meta property="og:url" content="https://bitcoinuniverseio.github.io/block-20/reference.html">
+<meta property="og:image" content="https://bitcoinuniverseio.github.io/block-20/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">B20</span><span>BLOCK-20</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="index.html">Overview</a>
+      <a href="spec.html">Specification</a>
+      <a href="guide.html">Guide</a>
+      <a href="reference.html" aria-current="page">Reference</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="mint-hash.html">Mint anchor</a>
+      <a href="vectors.html">Test vectors</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div class="header-tools">
+      <div class="search">
+        <input id="site-search" type="search" placeholder="Search (press /)" aria-label="Search this documentation" autocomplete="off" data-base="">
+        <ul class="search-results" id="search-results" aria-live="polite"></ul>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" hidden>Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Reference</p>
+    <h1>BLOCK-20 reference</h1>
+    <p class="lead">Terminology, what an indexer does with confirmations and reorganizations, what a BLOCK-20 inscription costs, where the protocol stops, and what to check before shipping an implementation.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <nav class="toc" aria-labelledby="toc-h">
+      <h2 id="toc-h">Contents</h2>
+      <ol>
+        <li><a href="#terms">Terminology</a></li>
+        <li><a href="#indexer">Indexer semantics</a></li>
+        <li><a href="#state">State model</a></li>
+        <li><a href="#fees">Fees and size</a></li>
+        <li><a href="#market">Trading and market access</a></li>
+        <li><a href="#limits">Limitations</a></li>
+        <li><a href="#security">Security considerations</a></li>
+        <li><a href="#checklist">Implementation checklist</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="terms">1. Terminology</h2>
+    <div class="table-wrap">
+      <table>
+        <caption>Terms used consistently across this documentation.</caption>
+        <thead><tr><th scope="col">Term</th><th scope="col">Meaning</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Writer</th><td>Software that builds a BLOCK-20 payload and broadcasts the inscription. It decides nothing about token state.</td></tr>
+          <tr><th scope="row">Reader</th><td>An indexer that replays BLOCK-20 inscriptions and computes ticker state, balances, and supply.</td></tr>
+          <tr><th scope="row">Reader profile</th><td>A named, versioned rule set a reader implements. This site documents <code>bitcoin-universe-block20-v1</code>.</td></tr>
+          <tr><th scope="row">Payload</th><td>The UTF-8 JSON bytes carried as inscription content.</td></tr>
+          <tr><th scope="row">Reveal</th><td>The transaction that spends the commit output and exposes the inscription. Its block is the reveal block.</td></tr>
+          <tr><th scope="row">Anchor</th><td>The Bitcoin block named by a mint's <code>hash</code> field. Its height is the anchor height.</td></tr>
+          <tr><th scope="row">Freshness window</th><td>The maximum number of blocks a reader allows between the anchor and the reveal. Default 144.</td></tr>
+          <tr><th scope="row">Ticker identity</th><td>The lowercase form of <code>tick</code>. Two tickers differing only in case are the same token.</td></tr>
+          <tr><th scope="row">Reservation</th><td>An amount committed by a transfer inscription that has not yet settled. It reduces available balance, not balance.</td></tr>
+          <tr><th scope="row">Available balance</th><td>Balance minus the sum of that holder's unsettled reservations for the ticker.</td></tr>
+          <tr><th scope="row">Settlement</th><td>The effect of the first move of a transfer inscription: transfer, fee return, or burn.</td></tr>
+          <tr><th scope="row">Partial final mint</th><td>A mint credited for less than it requested because remaining supply was smaller.</td></tr>
+          <tr><th scope="row">Finalized height</th><td>Tip height minus the reader's finality depth. Events at or below it are not reversible by the reader.</td></tr>
+          <tr><th scope="row">Coverage</th><td>How complete a reader's view is: complete, partial, or unavailable.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="indexer">2. Indexer semantics</h2>
+
+    <h3 id="confirmation">2.1 Confirmation</h3>
+    <ul>
+      <li>An event's confirmation count is <code>tip height - block height + 1</code>. An event in the tip block has one confirmation.</li>
+      <li>A confirmed event carries complete block placement: height, block hash, transaction index, and event index. A reader that cannot supply all four must not mark the event confirmed.</li>
+      <li>The finalized height is <code>tip height - finality depth</code>, with a default depth of 6. It never moves backward.</li>
+      <li>Coverage is reported as <code>complete</code> only while the reader has processed through the current tip. While catching up it reports <code>partial</code>, and consumers should treat balances as provisional.</li>
+    </ul>
+
+    <h3 id="mempool">2.2 Mempool and pending events</h3>
+    <p>The event model has a <code>pending</code> confirmation state for unconfirmed activity. A pending event carries no block height, no block hash, no transaction index, no event index, and zero confirmations, and it may never transition back to pending once confirmed.</p>
+    <div class="callout warn">
+      <p><strong>The Bitcoin Universe reader does not currently emit an exhaustive mempool feed.</strong> Its normalized coverage is <code>partial</code>: confirmed history and complete holder snapshots are indexed, but there is no exhaustive pending lifecycle with reliable disappearance handling. Treat an unconfirmed BLOCK-20 inscription as having no effect until it is mined. Do not build a product that shows pending BLOCK-20 balances from this source.</p>
+    </div>
+    <p>A mint has an additional reason to distrust the mempool: the anchor rule compares the anchor height against the <em>reveal</em> height. Until the reveal is mined, the reveal height does not exist, so the freshness check cannot be evaluated at all.</p>
+
+    <h3 id="reorg">2.3 Reorganization</h3>
+    <figure class="diagram">
+      <svg viewBox="0 0 840 210" role="img" aria-labelledby="reorg-title reorg-desc">
+        <title id="reorg-title">Reorganization handling in a BLOCK-20 reader</title>
+        <desc id="reorg-desc">A chain of blocks up to a finalized boundary, then a fork. The reader detects that the block at its checkpoint height no longer matches, invalidates events from the replaced branch newest first, reverses their exact wallet and supply deltas, restores transfer reservations, and then replays the replacement branch. Events at or below the finalized height cannot be invalidated and the reader stops instead.</desc>
+        <g>
+          <rect x="20" y="70" width="110" height="60" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="75" y="96" font-size="12" text-anchor="middle" fill="var(--d-muted)" font-family="ui-monospace, monospace">finalized</text>
+          <text x="75" y="114" font-size="11" text-anchor="middle" fill="var(--d-muted)">not reversible</text>
+        </g>
+        <path d="M130 100 h30" fill="none" stroke="var(--d-line)" stroke-width="2"></path>
+        <g>
+          <rect x="160" y="70" width="110" height="60" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="215" y="105" font-size="12" text-anchor="middle" fill="var(--d-text)" font-family="ui-monospace, monospace">common</text>
+        </g>
+        <g fill="none" stroke="var(--d-line)" stroke-width="2">
+          <path d="M270 100 h25 v-40 h25"></path>
+          <path d="M270 100 h25 v40 h25"></path>
+        </g>
+        <g opacity="0.55">
+          <rect x="320" y="30" width="120" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2" stroke-dasharray="6 4"></rect>
+          <text x="380" y="55" font-size="12" text-anchor="middle" fill="var(--d-muted)">replaced branch</text>
+          <text x="380" y="74" font-size="11" text-anchor="middle" fill="var(--d-muted)">events invalidated</text>
+        </g>
+        <g>
+          <rect x="320" y="120" width="120" height="58" rx="4" fill="var(--d-accent-bg)" stroke="var(--d-accent)" stroke-width="3"></rect>
+          <text x="380" y="145" font-size="12" text-anchor="middle" fill="var(--d-accent)" font-weight="700">active branch</text>
+          <text x="380" y="164" font-size="11" text-anchor="middle" fill="var(--d-muted)">replayed from scratch</text>
+        </g>
+        <path d="M440 149 h30" fill="none" stroke="var(--d-line)" stroke-width="2"></path>
+        <g>
+          <rect x="470" y="120" width="350" height="58" rx="4" fill="var(--d-fill)" stroke="var(--d-line)" stroke-width="2"></rect>
+          <text x="486" y="143" font-size="12" fill="var(--d-text)">Anchors are resolved again against the new history,</text>
+          <text x="486" y="162" font-size="12" fill="var(--d-text)">so an orphaned anchor makes its mint invalid.</text>
+        </g>
+      </svg>
+      <figcaption>A reorganization is not a rewrite of balances by hand. Recorded deltas are reversed exactly, then the replacement branch is processed like any other range of blocks.</figcaption>
+    </figure>
+    <ul>
+      <li>The reader compares the block at its checkpoint height against the node. A hash mismatch starts reconciliation.</li>
+      <li>The scan depth for a recoverable fork defaults to 144 blocks.</li>
+      <li>Events are invalidated newest first, by descending height, transaction index, then event index.</li>
+      <li>Invalidation reverses the exact recorded wallet and supply deltas of each event, restores reservations that were settled on the replaced branch, and removes reservations created on it.</li>
+      <li>Invalidating a deploy deactivates the ticker. Leaving an applied mint or transfer attached to an inactive deployment is a fatal condition.</li>
+      <li>An event at or below the finalized height cannot be invalidated. The reader stops rather than produce a state it cannot justify.</li>
+      <li>Because anchors are resolved against the active chain during replay, a mint whose anchor block was orphaned does not survive the replay even though its bytes are unchanged.</li>
+    </ul>
+
+    <h2 id="state">3. State model</h2>
+    <p>A reader tracks four supply figures per ticker plus per-holder balances.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Supply effects of each accepted operation.</caption>
+        <thead><tr><th scope="col">Operation</th><th scope="col">Total</th><th scope="col">Circulating</th><th scope="col">Minted</th><th scope="col">Burned</th><th scope="col">Holder balance</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">deploy</th><td>0</td><td>0</td><td>0</td><td>0</td><td>no change</td></tr>
+          <tr><th scope="row">mint</th><td>+credited</td><td>+credited</td><td>+credited</td><td>0</td><td>owner +credited</td></tr>
+          <tr><th scope="row">transfer inscription</th><td>0</td><td>0</td><td>0</td><td>0</td><td>no change, available falls</td></tr>
+          <tr><th scope="row">transfer settlement</th><td>0</td><td>0</td><td>0</td><td>0</td><td>sender minus, receiver plus</td></tr>
+          <tr><th scope="row">fee return</th><td>0</td><td>0</td><td>0</td><td>0</td><td>no change, reservation released</td></tr>
+          <tr><th scope="row">burn settlement</th><td>-amount</td><td>-amount</td><td>0</td><td>+amount</td><td>owner minus</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Invariants a reader must maintain: <code>total = minted - burned</code>, <code>circulating = total</code>, and <code>minted &lt;= max</code>. Minted supply never decreases, so burning does not reopen minting capacity.</p>
+
+    <h2 id="fees">4. Fees and size</h2>
+    <ul>
+      <li>Payload sizes are small. A transfer is 57 bytes, a deploy 73 bytes, a deploy with a 26 character description 108 bytes, and a mint 128 bytes because of the 64 character anchor hash. The hard ceiling on inscription content is 2048 bytes.</li>
+      <li>A mint is always the largest of the three operations. The anchor costs roughly 70 bytes of witness data on every mint, which is the price of the proof.</li>
+      <li>Publishing an inscription takes two transactions: a commit that funds a dedicated address, and a reveal that spends it and exposes the inscription. Both pay fees.</li>
+      <li>A transfer costs two inscriptions worth of activity in practice: the transfer inscription itself, then a further transaction to move it. Budget for both before starting.</li>
+      <li>The Bitcoin Universe writer computes the required commit amount from the estimated reveal fee, the inscription output value, and a fixed service fee of 1500 satoshis.</li>
+      <li>The writer accepts exactly one eligible output at the commit address, prefers a confirmed one, and chooses the largest eligible output. It does not aggregate several smaller payments.</li>
+      <li>The selected commit output is spent in full by the reveal. After fees, residual value is sent to the configured receiver, so overfunding is not lost but does change the economics of that single reveal.</li>
+      <li>Inscription output values below 330 satoshis are treated as zero by the writer. A typical value is 546 satoshis.</li>
+    </ul>
+
+    <h2 id="market">5. Trading and market access</h2>
+    <div class="callout bad">
+      <p><strong>There is no Bitcoin Universe marketplace path for BLOCK-20.</strong> The organization's capability registry contains no marketplace entry for this protocol at all. No Universe product implements listing, updating a listing, unlisting, buying, making an offer, accepting an offer, cancelling an offer, selling, settling, or reconciling for BLOCK-20.</p>
+      <p>What exists is discovery in the Core explorer, view, send, and receive in the Wallet, and deploy, mint, and transfer in Inscribe. BLOCK-20 is indexed but not tradeable inside Bitcoin Universe.</p>
+    </div>
+    <p>This documentation makes no claim about third-party venues. If you are told a BLOCK-20 market exists somewhere, verify independently which reader profile that venue applies, because a venue that skips the anchor check will value balances this profile does not recognize.</p>
+
+    <h2 id="limits">6. Limitations</h2>
+    <ol>
+      <li><strong>No version field.</strong> A payload carries no profile version, so any change to field names, defaults, serialization, or the anchor rule is compatibility sensitive by construction.</li>
+      <li><strong>The freshness window is a reader setting.</strong> The default is 144 blocks but any value from 1 to 10000 is configurable. Two readers can legitimately disagree about a mint near the boundary.</li>
+      <li><strong>The writer validates nothing about tokens.</strong> It will inscribe a mint above the limit, a mint for a ticker that does not exist, or a deploy of a taken ticker. Bitcoin fees are spent either way.</li>
+      <li><strong>Anchor validity depends on chain history.</strong> The same inscription bytes can be valid on one chain history and invalid after a reorganization that orphans the anchor block.</li>
+      <li><strong>No pending view.</strong> Coverage is partial. Unconfirmed BLOCK-20 activity is not reliably represented, and a mint cannot even be evaluated before its reveal is mined.</li>
+      <li><strong>Transfers need two transactions.</strong> There is no single-transaction send.</li>
+      <li><strong>Burning does not free supply.</strong> Minted supply never decreases, so a burnt token is gone and its mint capacity is not returned.</li>
+      <li><strong>Zero decimals.</strong> There is no subdivision. A ticker that needs fractional units cannot express them.</li>
+      <li><strong>Five character tickers, ASCII only.</strong> No Unicode, which removes confusable-character attacks but also removes expressiveness.</li>
+      <li><strong>Order expiry is monitor behavior, not a gate.</strong> A qualifying payment found after the window can still be revealed, which means a late reveal can still fail the freshness rule.</li>
+      <li><strong>Repeat count is not multi-mint.</strong> In a direct order it multiplies the funding amount without creating multiple inscriptions. It must not be presented to users as a bulk mint feature.</li>
+      <li><strong>No marketplace.</strong> See section 5.</li>
+    </ol>
+
+    <h2 id="security">7. Security considerations</h2>
+    <ol>
+      <li><strong>Reject an empty receiver address.</strong> A writer that falls back to its own server-generated commit address when the receiver is empty will deliver the inscription to key material you do not control. A client must require a valid user-controlled address before creating an order.</li>
+      <li><strong>Server-held reveal keys.</strong> A hosted writer holds the key that signs the reveal. Between commit funding and reveal, the service can complete or fail the operation. Prefer short windows and verify the reveal destination afterward.</li>
+      <li><strong>Ticker squatting is permanent.</strong> First valid deploy wins, identity is case-insensitive, and metadata is immutable. There is no dispute mechanism in the protocol.</li>
+      <li><strong>Do not trust a reader that skips the anchor check.</strong> Balances computed without rules R6.5 through R6.8 will be higher than this profile's, and the difference is exactly the set of mints this profile rejects.</li>
+      <li><strong>Wait for finality before treating a mint as settled.</strong> Reorganizations reverse events above the finalized height, and an orphaned anchor invalidates a mint that previously looked valid.</li>
+      <li><strong>Strict parsing is a security property.</strong> Duplicate keys, non-string values, and trailing content are rejected rather than recovered, so two conforming readers cannot be made to disagree by a crafted payload. A reader that adds lenient recovery reintroduces that attack.</li>
+      <li><strong>Payload content is untrusted text.</strong> A description can contain any printable UTF-8 up to 256 bytes. Escape it before rendering, and never treat it as markup or as an instruction.</li>
+      <li><strong>Fail closed on source disagreement.</strong> A reader that cannot obtain a contiguous block range, that sees a network mismatch, or that would have to invalidate a finalized event must stop rather than guess.</li>
+      <li><strong>Do not pay an order twice.</strong> A slow status is not a request for a second payment. Preserve the order record and the wallet transaction ID instead.</li>
+      <li><strong>Report vulnerabilities privately</strong> through <a href="https://github.com/bitcoinuniverseio/block-20/security/policy">this repository's security policy</a>. Do not open a public issue for a security defect.</li>
+    </ol>
+
+    <h2 id="checklist">8. Implementation checklist</h2>
+    <p>For anyone writing a BLOCK-20 reader that claims the <code>bitcoin-universe-block20-v1</code> profile.</p>
+    <div class="grid two">
+      <article class="card">
+        <h3>Ingestion</h3>
+        <ul class="note-list">
+          <li>Process blocks in ascending height with no gaps; stop on a gap.</li>
+          <li>Filter inscriptions to content types matching text/plain or application/json.</li>
+          <li>Filter content length to 1 through 2048 bytes before parsing.</li>
+          <li>Order within a block by transaction index, moves before reveals, then ordinal, then inscription ID.</li>
+          <li>Verify the network of every address against the configured network.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Parsing</h3>
+        <ul class="note-list">
+          <li>Decode UTF-8 strictly and fail on invalid sequences.</li>
+          <li>Implement the flat string object grammar; do not delegate to a permissive JSON parser.</li>
+          <li>Reject duplicate keys, non-string values, and trailing content.</li>
+          <li>Enforce exact field sets per operation with no extensions.</li>
+          <li>Validate numbers as strings against the strict integer grammar before conversion.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Anchor validation</h3>
+        <ul class="note-list">
+          <li>Resolve every mint hash through a Bitcoin node, not a cache of headers alone.</li>
+          <li>Confirm the header is known, has at least one confirmation, and that the block at that height still hashes to the same value.</li>
+          <li>Check the deploy bound, the reveal bound, and the freshness window in that order.</li>
+          <li>Document your window value; consumers need it to reproduce your balances.</li>
+          <li>Re-resolve anchors on replay after a reorganization.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>State and recovery</h3>
+        <ul class="note-list">
+          <li>Use arbitrary-precision integers; amounts reach 2<sup>128</sup> minus 1.</li>
+          <li>Record explicit wallet and supply deltas per event so invalidation is exact reversal.</li>
+          <li>Give every event a stable identity that survives replay.</li>
+          <li>Track transfer reservations separately from balances.</li>
+          <li>Invalidate newest first and refuse to invalidate finalized events.</li>
+          <li>Apply every change for a block in a single atomic transaction.</li>
+        </ul>
+      </article>
+    </div>
+    <p>Verify the result against the <a href="vectors.html">test vectors</a>, including every boundary case in the anchor derivation.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <dl class="footer-facts">
+      <div><dt>Owning repository</dt><dd><a href="https://github.com/bitcoinuniverseio/block-20">bitcoinuniverseio/block-20</a></dd></div>
+      <div><dt>Source path</dt><dd><code>reference.html</code></dd></div>
+      <div><dt>Document version</dt><dd>2.0.0</dd></div>
+      <div><dt>Reader profile</dt><dd><code>bitcoin-universe-block20-v1</code></dd></div>
+      <div><dt>Lifecycle</dt><dd>Experimental</dd></div>
+      <div><dt>Chain and network</dt><dd>Bitcoin, mainnet</dd></div>
+      <div><dt>Last verified</dt><dd><time datetime="2026-09-01">2026-09-01</time></dd></div>
+    </dl>
+    <ul class="footer-links">
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/edit/main/reference.html">Edit this page on GitHub</a></li>
+      <li><a href="https://docs.bitcoinuniverse.io">Bitcoin Universe documentation platform</a></li>
+      <li><a href="https://github.com/bitcoinuniverseio/block-20/security/policy">Report a vulnerability</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>
