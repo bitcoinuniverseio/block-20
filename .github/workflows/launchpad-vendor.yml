@@ -1,0 +1,21 @@
+name: Launchpad vendor check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, universe-runners-1]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - run: npm run verify:launchpad
+      - run: npm test

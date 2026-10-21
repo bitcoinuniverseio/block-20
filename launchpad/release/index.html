@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/assets/logo192-DI2hpDdS.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Universe Launchpad</title>
+    <meta name="description" content="Universe Launchpad">
+    <meta property="og:url" content="https://launchpad.bitcoinuniverse.io">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Universe Launchpad">
+    <meta property="og:description" content="Explore Bitcoin’s leading all-in-one platform that seamlessly supports Ordinals, Runes, Alkanes, Stamps, Atomicals, Fractal, and more! Mint, buy, sell and create anything on Bitcoin!">
+    <meta property="og:image" content="https://bitcoinuniverse.io/img/twitter_og.png">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="twitter:domain" content="launchpad.bitcoinuniverse.io">
+    <meta property="twitter:url" content="https://launchpad.bitcoinuniverse.io">
+    <meta name="twitter:title" content="Universe Launchpad">
+    <meta name="twitter:description" content="Explore Bitcoin’s leading all-in-one platform that seamlessly supports Ordinals, Runes, Alkanes, Stamps, Atomicals, Fractal, and more! Mint, buy, sell and create anything on Bitcoin!">
+    <meta name="twitter:image" content="https://bitcoinuniverse.io/img/twitter_og.png">
+
+    <link rel="apple-touch-icon" href="/assets/logo192-DI2hpDdS.png" />
+    <script src="/vendor/launchpad/tapscript-1.2.7.2824ba7d.min.js" integrity="sha384-aN7fQKyft9H2IqlsdyTVjkwPMgoFeEAJF3n/paOpglmCME5BzGVCKxu1GtJq4npi" crossorigin="anonymous"></script>
+    <script src="/vendor/launchpad/crypto-utils-1.5.11.53a8bb1e.min.js" integrity="sha384-3RY7u7Zr1agNwv965zQeEiDmzJkSvpPjd7ptpBbwhWA3C4SNWS2g4ozlTrJo6IHB" crossorigin="anonymous"></script>
+    <script>
+      (function () {
+        var ready = !!(window.tapscript && window.tapscript.Tx && window.tapscript.Tap && window.tapscript.Signer && window.cryptoUtils && window.cryptoUtils.KeyPair);
+        document.addEventListener('DOMContentLoaded', function () {
+          if (ready) {
+            var app = document.createElement('script');
+            app.type = 'module';
+            app.crossOrigin = 'anonymous';
+            app.src = '/assets/index-De9Bq-ib.js';
+            document.body.appendChild(app);
+            return;
+          }
+          var root = document.getElementById('root');
+          if (root) {
+            root.innerHTML = '<p role="alert" data-launchpad-load-error style="max-width:32rem;margin:4rem auto;padding:0 1rem;font:16px/1.5 system-ui,sans-serif;text-align:center">Launch tools could not load. Your wallet has not been asked to sign. Reload to try again.</p>';
+          }
+        });
+      })();
+    </script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CI5xegRg.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
