@@ -10,12 +10,23 @@ permissions:
 
 jobs:
   verify:
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, universe-runners-1]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - run: npm run runtime:check
+      - uses: actions/cache@v4
+        id: packages
         with:
-          node-version: 24.19.0
+          path: node_modules
+          key: launchpad-${{ runner.os }}-node24.19.0-npm11.17.0-${{ hashFiles('package-lock.json') }}
+      - if: steps.packages.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit
       - run: npm run verify:launchpad
       - run: npm test
+      # Runner images provide the matching Chromium. Do not install software
+      # during a warm job; a missing browser is a runner provisioning failure.
+      - run: npm run test:e2e
