@@ -80,10 +80,7 @@ of `GET http://127.0.0.1:38385/api/blocks/tip/height`. Check
 
 ### Rollback
 
-Restore the previous `/etc/universe/block20-api.env` from its timestamped copy
-and run `systemctl restart universe-block20-api.service` (owner approval
-required). The current state is already the failing state, so rollback cannot
-make it worse.
+Keep payment and broadcast admission closed. Before any approved release, record the current release symlink and copy the environment to an operator-owned path outside the web root. Stage and verify the replacement through the established release path; do not restart the only serving process as a smoke check. Roll back the release symlink and environment atomically through that same path if its read-only probes fail. No worker may be started twice. The old URL remains unavailable, so reverting it does not restore transaction readiness.
 
 ## Cause 2: the token explorer waits for the ord provider
 
@@ -129,3 +126,11 @@ snapshot, and that path does not exist on the workstation. Import the
 deployed release (`/opt/universe/block20-api/releases/20260925T230721Z-7aea1002`,
 with its `SOURCE_MANIFEST.sha256`) into a Universe repository before changing
 its code.
+
+## Prepared read change and remaining integration
+
+Branch `fix/p2-ins-claude` in `index-block20` separates stored read readiness from live provider readiness for normalized feeds, asset reads and the legacy catalogue. It checks the stored network, source, ruleset, height, block hash and timestamp. Reads include `asOfHeight`, `ageSeconds` and `transactionsReady: false`; `/ready` keeps its live-provider contract. No new writer, schema migration, RPC fallback or tunnel is introduced. Roll back the reader artifact through its existing release process; preserve the database and keep admission closed.
+
+The Inscribe backend currently maps the legacy catalogue into `{total,tokens}` and discards checkpoint metadata in `backend/src/block20/block20.service.ts::getTokens`. That file belongs to the backend agent. Before claiming dated results in Inscribe, preserve validated `asOfHeight`, `ageSeconds`, and `transactionsReady: false` through that mapping and its cache; test malformed, wrong-network and unavailable reads. The frontend is prepared to show the exact dated message and disable transaction controls when that evidence arrives. No metadata must be invented from the time the proxy fetched the page.
+
+After an approved release, GET `/block20/indexer?limit=1&offset=0` through the existing owned route. Require HTTP 200 with a nonnegative integer height and age, `transactionsReady: false`, and actual stored rows. With no qualified checkpoint require HTTP 503, never an empty success. `/ready` must remain 503 during the provider outage. Use authenticated normalized reads only through an existing server-side credential mechanism; do not expose source bearer credentials in browser code.

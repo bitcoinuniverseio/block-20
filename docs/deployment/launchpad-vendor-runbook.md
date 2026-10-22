@@ -31,6 +31,7 @@ also a supply-chain risk.
    `node launchpad/scripts/verify-launchpad-vendor.mjs` must print
    `Launchpad vendor assets match the manifest.`
 2. `node --test "launchpad/tests/*.test.mjs"` must pass.
+   `npm ci && npm run test:e2e` must also pass using the installed pinned Chromium.
 3. Confirm the live entry page is still the one this change was built from:
 
    ```sh
@@ -40,6 +41,11 @@ also a supply-chain risk.
 
    Stop if it differs. Rebuild `launchpad/release/index.html` from the new
    page first.
+
+4. Verify every installed application asset against `launchpad-ownership.json`.
+   Do not reuse this entry page against a different bundle. The source of the
+   installed application has not been recovered; this is a dependency-delivery
+   patch, not a reproducible release of the entire application.
 
 ## Deploy (as root on srv747890)
 
@@ -85,8 +91,14 @@ error, and `typeof window.tapscript.Tx` is `function`. Do not sign anything.
 
 ```sh
 DOC=/home/bitcoinuniverse/public_html/launchpad.bitcoinuniverse.io
-cp -a /root/launchpad-index.html.before-<STAMP> "$DOC/index.html"
+# Keep the verified local dependencies. If the application cannot initialize,
+# atomically publish an unavailable page instead of restoring external loads.
+printf '%s\n' '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Launchpad</title><main><p role="alert">Launch tools could not load. Your wallet has not been asked to sign. Reload to try again.</p></main></html>' > "$DOC/index.html.next"
+chown bitcoinuniverse:bitcoinuniverse "$DOC/index.html.next"
+chmod 0644 "$DOC/index.html.next"
+mv "$DOC/index.html.next" "$DOC/index.html"
 ```
 
-The vendor directory can stay; nothing else reads it. Rolling back restores
-the broken third-party loads, so prefer fixing forward.
+The unavailable page loads no application or wallet code. Preserve the prior
+entry outside the document root for comparison. Restore only a previously
+verified local release after its dependency and browser checks pass.

@@ -16,10 +16,11 @@
     },
     "builtAt": "2025-08-03 (file dates of assets/)",
     "sourceRepository": null,
+    "maintainedReleaseRepository": "bitcoinuniverseio/block-20",
     "sourceNotes": [
       "No repository under C:\\universe contains the block20.wtf script tags or this bundle.",
       "inscribe backend/docs/runbooks/production-operations.md names C:\\Universe\\work\\launchpad-migration-source (commit b2c1ccb, no remote). That directory does not exist on the workstation.",
-      "This repository (block-20) holds the reviewed entry page and vendored scripts until the owner names a source repository."
+      "This repository (block-20) owns the reviewed entry page and vendored scripts. The original application bundle source has not been recovered."
     ],
     "globalsUsedByBundle": {
       "window.tapscript": ["Address", "Script", "Signer", "Tap", "Tx"],
@@ -35,5 +36,5 @@
     "workingDirectory": "/opt/universe/launchpad-api/current",
     "unitSource": "inscribe repo backend/ops/whm/universe-launchpad-api.service"
   },
-  "releaseGate": "The owner must name the repository that will own the Launchpad frontend source. Until then the only reviewed artifacts are launchpad/release/index.html and launchpad/vendor/ in this repository."
+  "releaseGate": "Recover and verify the original application source before changing or rebuilding the application bundle. This release only replaces the entry and dependency delivery against the pinned deployed bundle hashes. Production deployment requires owner approval."
 }
