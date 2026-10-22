@@ -1,0 +1,22 @@
+{
+  "name": "block-20",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.19.0",
+    "npm": "11.17.0"
+  },
+  "packageManager": "npm@11.17.0",
+  "scripts": {
+    "runtime:check": "node launchpad/scripts/check-runtime.mjs",
+    "pretest": "npm run runtime:check",
+    "preverify:launchpad": "npm run runtime:check",
+    "pretest:e2e": "npm run runtime:check",
+    "verify:launchpad": "node launchpad/scripts/verify-launchpad-vendor.mjs",
+    "test": "node --test \"launchpad/tests/*.test.mjs\"",
+    "test:e2e": "playwright test --config=launchpad/playwright.config.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

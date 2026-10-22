@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "launchpad-ownership-v1",
+  "recordedAt": "2026-10-21",
+  "method": "Read-only SSH reads and loopback GETs on srv747890. No production file changed.",
+  "frontend": {
+    "host": "launchpad.bitcoinuniverse.io",
+    "server": "srv747890 (Hostinger, cPanel account bitcoinuniverse)",
+    "documentRoot": "/home/bitcoinuniverse/public_html/launchpad.bitcoinuniverse.io",
+    "cpanelUserdata": "/var/cpanel/userdata/bitcoinuniverse/launchpad.bitcoinuniverse.io",
+    "kind": "Prebuilt Vite single-page app. Apache serves it; .htaccess forces HTTPS and falls back to index.html.",
+    "files": {
+      "index.html": "63befcb74cd003c1afcdc5c64d61b98bed4ddf4faad6ac818502990f260f1fa6",
+      "assets/index-De9Bq-ib.js": "3eb2fe1441a25f9ee089e808221b0b06d3cf0a3daca649f518ef82a8d48e621c",
+      "assets/index-CI5xegRg.css": "80e2a92cbc564eaf8fdf22e974f30c967fb8e3f5583f3ae3d7518fb8c174217e",
+      "assets/logo192-DI2hpDdS.png": "88eb64aeb78a6c93914388fe8a0a3af0857284b67273d9a54ce4a848ef8a0320"
+    },
+    "builtAt": "2025-08-03 (file dates of assets/)",
+    "sourceRepository": null,
+    "maintainedReleaseRepository": "bitcoinuniverseio/block-20",
+    "sourceNotes": [
+      "No repository under C:\\universe contains the block20.wtf script tags or this bundle.",
+      "inscribe backend/docs/runbooks/production-operations.md names C:\\Universe\\work\\launchpad-migration-source (commit b2c1ccb, no remote). That directory does not exist on the workstation.",
+      "This repository (block-20) owns the reviewed entry page and vendored scripts. The original application bundle source has not been recovered."
+    ],
+    "globalsUsedByBundle": {
+      "window.tapscript": ["Address", "Script", "Signer", "Tap", "Tx"],
+      "window.cryptoUtils": ["KeyPair", "Noble.utils.randomPrivateKey"],
+      "wif": "not referenced",
+      "Buffer": "not referenced"
+    }
+  },
+  "api": {
+    "host": "api.launchpad.bitcoinuniverse.io",
+    "port": 3111,
+    "unit": "universe-launchpad-api.service",
+    "workingDirectory": "/opt/universe/launchpad-api/current",
+    "unitSource": "inscribe repo backend/ops/whm/universe-launchpad-api.service"
+  },
+  "releaseGate": "Recover and verify the original application source before changing or rebuilding the application bundle. This release only replaces the entry and dependency delivery against the pinned deployed bundle hashes. Production deployment requires owner approval."
+}
