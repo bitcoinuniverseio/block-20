@@ -1,0 +1,25 @@
+name: Site checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: [self-hosted, Linux, X64, universe]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check JavaScript syntax
+        run: |
+          node --check site.js
+          node --check verify.js
+      - name: Check JSON syntax
+        run: node -e "for (const f of ['docs.manifest.json', 'search-index.json']) JSON.parse(require('fs').readFileSync(f, 'utf8'))"
