@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "launchpad-vendor-v1",
+  "publicPath": "/vendor/launchpad/",
+  "verifiedAt": "2026-10-21",
+  "loadOrder": [
+    "tapscript-1.2.7.2824ba7d.min.js",
+    "crypto-utils-1.5.11.53a8bb1e.min.js"
+  ],
+  "assets": [
+    {
+      "file": "tapscript-1.2.7.2824ba7d.min.js",
+      "replaces": "https://block20.wtf/scripts/tapscript.1.2.7.js",
+      "package": "@cmdcode/tapscript",
+      "version": "1.2.7",
+      "sourcePath": "package/dist/bundle.min.js",
+      "tarball": "https://registry.npmjs.org/@cmdcode/tapscript/-/tapscript-1.2.7.tgz",
+      "tarballIntegrity": "sha512-aEB3OUasLG+Xa1u4zIDNpcZfVJ52mggLz1PYSxPsh4WLsgplWEDVIeRh7H0JapGXw1K6qJOL+iUjT52zweEzLA==",
+      "repository": "https://github.com/cmdruid/tapscript",
+      "license": "package.json declares CC-BY-1.0; the shipped LICENSE file is CC0 1.0 (copied as LICENSE.tapscript)",
+      "bytes": 173251,
+      "sha256": "2824ba7d8c142eb3b1a164bde5108f3ba8bc136268e8332fcb7ad5886ab3372f",
+      "sri": "sha384-aN7fQKyft9H2IqlsdyTVjkwPMgoFeEAJF3n/paOpglmCME5BzGVCKxu1GtJq4npi",
+      "global": "tapscript",
+      "exports": ["Address", "Script", "Signer", "Tap", "Tx"]
+    },
+    {
+      "file": "crypto-utils-1.5.11.53a8bb1e.min.js",
+      "replaces": "https://block20.wtf/scripts/crypto-utils.1.5.11.js",
+      "package": "@cmdcode/crypto-utils",
+      "version": "1.5.11",
+      "sourcePath": "package/dist/bundle.min.js",
+      "tarball": "https://registry.npmjs.org/@cmdcode/crypto-utils/-/crypto-utils-1.5.11.tgz",
+      "tarballIntegrity": "sha512-Rzt7b7lSs7DU/0VcYYUSdsB3zQ1uiAnICro6iZQSjWEMGRPKT/yxG8hPmeaDiDTNBI3Y8z7VIkSCAY0UIuhh8Q==",
+      "repository": "https://github.com/cmdruid/crypto-utils",
+      "license": "package.json declares CC-BY-1.0; the shipped LICENSE file is CC0 1.0 (copied as LICENSE.crypto-utils)",
+      "bytes": 36449,
+      "sha256": "53a8bb1ec0818b0a1f6d40335ce6d3ce4ff43c340dbdab183ab90be3977a087b",
+      "sri": "sha384-3RY7u7Zr1agNwv965zQeEiDmzJkSvpPjd7ptpBbwhWA3C4SNWS2g4ozlTrJo6IHB",
+      "global": "cryptoUtils",
+      "exports": ["KeyPair", "Noble"]
+    }
+  ],
+  "dropped": [
+    {
+      "url": "https://block20.wtf/scripts/wif.js",
+      "reason": "The live bundle assets/index-De9Bq-ib.js never reads a wif global. The file has no version, so its bytes cannot be verified."
+    },
+    {
+      "url": "https://block20.wtf/scripts/buffer.6.0.3.js",
+      "reason": "The live bundle assets/index-De9Bq-ib.js never reads a Buffer or buffer global. npm buffer@6.0.3 ships no browser build to compare against."
+    }
+  ]
+}

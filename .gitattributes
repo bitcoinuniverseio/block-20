@@ -1,0 +1,3 @@
+# Vendored Launchpad bytes are pinned by SHA-256 and SRI. Never convert them.
+launchpad/vendor/*.js -text
+launchpad/release/index.html -text

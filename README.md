@@ -109,3 +109,12 @@ address. Review the exact payload, receiver, commit address, required amount, ex
 before paying. Send one dedicated output, once. Never share a seed phrase or private key.
 Bitcoin payments and confirmed inscriptions are difficult to reverse, and an inscription that
 exists on Bitcoin is not the same as a balance that exists in a reader.
+[Open BLOCK-20 in Universe Inscribe](https://inscribe.bitcoinuniverse.io/block20)
+
+## Launchpad signing scripts
+
+`launchpad/` holds the reviewed Launchpad entry page and the two signing
+scripts it loads from its own host instead of `block20.wtf`. Run
+`npm run verify:launchpad` and `npm test` before you change anything there.
+Deployment steps are in `docs/deployment/launchpad-vendor-runbook.md`; the
+BLOCK-20 API readiness findings are in `docs/deployment/block20-rpc-runbook.md`.
